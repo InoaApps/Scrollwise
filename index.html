@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Scrollwise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#ffd84d;--bg2:#ffb648;--ink:#1a1300;--soft:#fff6d6}
+body.food{--bg:#a6ec8c;--bg2:#6fd49a;--ink:#06240f;--soft:#eaffe0}
+body.home{--bg:#17130f;--ink:#fff6e8;--soft:#2a241d}
+body.mind{--bg:#cdb8ff;--bg2:#f2a7d8;--ink:#1d0b3d;--soft:#f4edff}
+*{box-sizing:border-box;margin:0}html,body{height:100%}
+body{font:16px/1.5 Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);-webkit-tap-highlight-color:transparent}
+button{font:inherit;cursor:pointer;border:0;color:inherit}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+h1,.d{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:800;letter-spacing:-.01em}
+.tag{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.65}
+#app{height:100dvh;max-width:520px;margin:0 auto}
+.scr{height:100dvh;padding:max(28px,env(safe-area-inset-top)) 22px max(24px,env(safe-area-inset-bottom));display:flex;flex-direction:column}
+.feed{height:100dvh;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none}
+.feed::-webkit-scrollbar{display:none}
+.feed>.scr{scroll-snap-align:start;scroll-snap-stop:always}
+.alt{background:var(--bg2)}
+.dark{background:var(--ink);color:var(--soft)}
+.big{font-size:clamp(34px,10vw,46px);line-height:1.04;margin:14px 0}
+.q{font-size:clamp(28px,8vw,38px);line-height:1.1;margin:18px 0 auto}
+.lead{font-size:18px;font-weight:500;opacity:.85}
+.btn{display:block;width:100%;padding:18px;border-radius:18px;font-weight:700;font-size:18px;background:var(--ink);color:var(--bg);text-align:center}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 2.5px var(--ink)}
+.dark .btn{background:var(--bg);color:var(--ink)}
+.row{display:flex;gap:10px}.row .btn{flex:1}
+.sp{flex:1}.mt{margin-top:12px}.small{font-size:13px;text-align:center;opacity:.6;margin-top:12px;font-weight:600}
+.top{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px}
+.prog{display:flex;gap:4px;margin-top:10px}.prog i{flex:1;height:4px;border-radius:4px;background:rgba(0,0,0,.15)}.prog i.on{background:var(--ink)}
+.dark .prog i{background:rgba(255,255,255,.2)}.dark .prog i.on{background:var(--bg)}
+/* verdict */
+.verdict{font-size:clamp(64px,20vw,96px);line-height:.95;margin:auto 0 8px}
+.pill{display:inline-block;padding:6px 12px;border-radius:99px;font-weight:700;font-size:14px;background:var(--ink);color:var(--bg)}
+.hint{text-align:center;font-size:14px;font-weight:700;margin-top:16px;animation:bob 1.4s infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+/* explanation */
+.why h2{font:800 15px Inter;letter-spacing:.1em;text-transform:uppercase;color:var(--bg);margin:22px 0 6px}
+.why p{font-size:18px;line-height:1.55}
+.take{margin-top:auto;margin-bottom:4px;background:var(--bg);color:var(--ink);border-radius:18px;padding:16px 18px;font-weight:600}
+.take b{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:.65}
+/* swipe card */
+.deck{position:relative;flex:1;margin:18px 0}
+.card{position:absolute;inset:0;background:var(--soft);border-radius:28px;padding:26px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 14px 34px rgba(0,0,0,.18);touch-action:none;user-select:none;transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s}
+.card .q{margin:0}
+.stamp{position:absolute;top:24px;font:800 24px 'Bricolage Grotesque';padding:2px 12px;border:4px solid;border-radius:10px;opacity:0}
+.stamp.y{left:22px;transform:rotate(-12deg);color:#0f9d58}.stamp.n{right:22px;transform:rotate(12deg);color:#e0244d}
+/* profile share card */
+.pcard{background:var(--ink);color:var(--bg);border-radius:28px;padding:28px;margin:18px 0;text-align:center}
+.pcard .e{font-size:72px;line-height:1}
+.pcard .d{font-size:36px;margin:8px 0 6px}
+.pcard p{color:var(--soft);opacity:.9}
+/* domain chooser */
+.tile{color:#1a1300;display:block;width:100%;text-align:left;border-radius:24px;padding:22px;margin-top:12px}
+.tile .d{font-size:28px}
+ul.perks{list-style:none;padding:0;margin:18px 0}ul.perks li{padding:10px 0;border-bottom:2px solid rgba(0,0,0,.1);font-weight:600}
+input{width:100%;padding:16px;border-radius:16px;border:2.5px solid var(--ink);background:var(--soft);font:inherit;color:var(--ink);margin-bottom:10px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style></head><body><main id="app" aria-live="polite"></main>
+<script>
+const NAME="Scrollwise";
+const SB_URL="https://mgfishwtcbpsuqdbhpia.supabase.co",SB_KEY="sb_publishable_X0ga4Q-22xxn8L-z6eTVCw_xr7CCDdc",APP_ID="scroll-app";
+let PLAYER;try{PLAYER=localStorage.getItem("ds_pid")||crypto.randomUUID();localStorage.setItem("ds_pid",PLAYER)}catch{PLAYER=crypto.randomUUID()}
+function send(table,row){try{fetch(SB_URL+"/rest/v1/"+table,{method:"POST",keepalive:true,headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({app:APP_ID,player_id:PLAYER,...row})}).catch(()=>{})}catch{}}
+
+/* ================= CONTENT ================= */
+const D={
+money:{name:"Money",title:"Make smarter money decisions.",sub:"5 true-or-false cards a day. Each one explains the why, in 3 minutes.",
+ profiles:[["🗂️","The Planner","You like to know where every dollar goes. Your blind spot: playing it so safe that your money doesn't grow."],
+  ["🛍️","The Enjoyer","Money is for living, and you live well. Your blind spot: small spends that quietly add up."],
+  ["🙈","The Avoider","Money stresses you, so you look away. Your edge: a few simple rules will change a lot, fast."]],
+ swipes:[["I know roughly how much I spent last month.",0],["I'd rather enjoy money now than save it.",1],["I sometimes avoid opening my banking app.",2],["I have money set aside for emergencies.",0],["A sale often makes me buy things I didn't plan.",1],["Talking about money makes me uncomfortable.",2]],
+ cards:[
+ {q:"A savings account paying less than inflation loses buying power.",a:true,s:"Your balance grows, but what it can buy shrinks.",
+  w:["Inflation measures how fast prices rise. If your account pays 2% a year and prices rise 4%, a year later your money buys about 2% less.","The number on screen went up, but your real wealth went down. That's why economists look at the “real” return: your interest rate minus inflation."],
+  t:"Compare your interest rate to inflation, not to zero."},
+ {q:"Paying only the minimum on a credit card is a safe way to handle debt.",a:false,s:"It keeps you out of trouble today, but it's the most expensive way to repay.",
+  w:["Credit card interest in the US often runs above 20% a year. The minimum payment is set so that much of it covers interest, and only a little reduces what you owe.","A balance of a few thousand dollars can take many years to clear this way, and the total interest can end up larger than what you originally borrowed."],
+  t:"Pay more than the minimum, starting with the card that has the highest rate."},
+ {q:"A 1% yearly fund fee can eat a big share of your savings over 30 years.",a:true,s:"Around a quarter of your final amount, in a typical case.",
+  w:["A fee is taken every year from your whole balance, not just from your gains. And the money taken out also misses all its future growth.","With a 7% yearly return, 30 years with a 1% fee leaves you about 25% less than the same investment with almost no fees."],
+  t:"Check a fund's “expense ratio” before you invest."},
+ {q:"You need a lot of money to start investing.",a:false,s:"You can start with a few dollars.",
+  w:["Many brokers now have no minimum deposit and let you buy fractions of a share. An index fund gives you a slice of hundreds of companies at once.","What matters most over the long run is time: money invested early has more years to compound. Waiting until you have “enough” often costs more than starting small."],
+  t:"Start small, automate it, increase it later."},
+ {q:"People tend to spend more when paying by card than with cash.",a:true,s:"A card makes paying hurt less, so we spend more.",
+  w:["Researchers call it the “pain of paying”. Handing over cash is concrete: you watch it leave. A card tap feels abstract, so the brain registers the loss less.","Several studies have found people willing to pay more, or buy more, when paying by card."],
+  t:"For spending you want to control, try a fixed weekly amount."}]},
+food:{name:"Food",title:"Eat smarter, without dieting.",sub:"5 true-or-false cards a day on the food myths everyone believes.",
+ profiles:[["🔍","The Label Reader","You check what you eat. Your blind spot: some marketing claims are designed for people exactly like you."],
+  ["🍫","The Comfort Eater","Food is how you recharge. Your edge: knowing why cravings hit makes them much easier to handle."],
+  ["🍿","The Grazer","You snack more than you sit down for meals. Your edge: small swaps go a long way for you."]],
+ swipes:[["I check the nutrition label before buying.",0],["I eat more when I'm stressed or tired.",1],["I often snack instead of eating proper meals.",2],["I know roughly how much protein I eat.",0],["Food is my main way to reward myself.",1],["I often eat in front of a screen.",2]],
+ cards:[
+ {q:"Brown eggs are healthier than white eggs.",a:false,s:"Shell color depends on the hen's breed, not on nutrition.",
+  w:["Hens with white feathers usually lay white eggs, and hens with red or brown feathers usually lay brown ones. Inside, the eggs are basically the same.","Brown eggs often cost more because those breeds tend to be bigger and eat more. What can change nutrition is the hen's diet, for example feed enriched with omega-3."],
+  t:"Judge eggs by how the hens are raised and fed, not by color."},
+ {q:"Fresh vegetables are always more nutritious than frozen ones.",a:false,s:"Frozen vegetables can be just as nutritious.",
+  w:["Vegetables for freezing are usually picked ripe and frozen within hours, which locks in their vitamins.","“Fresh” vegetables can spend days in transport, on shelves and in your fridge, slowly losing some vitamins such as vitamin C. Studies comparing the two often find similar values."],
+  t:"Frozen vegetables are a cheap, healthy shortcut."},
+ {q:"Eating fat makes you fat.",a:false,s:"Weight gain comes from total calories, not from fat itself.",
+  w:["Fat has more calories per gram (9) than carbs or protein (4), so fatty foods add up fast. But eating fat doesn't turn directly into body fat.","Many “low-fat” products replaced fat with sugar. And fats from nuts, olive oil or fish help you feel full for longer."],
+  t:"Watch portions of fatty foods, but don't fear fat itself."},
+ {q:"Cooked lentils have more protein than cooked chicken breast, gram for gram.",a:false,s:"Chicken has about 3 times more protein per 100 g.",
+  w:["100 g of cooked chicken breast has about 31 g of protein, and 100 g of cooked lentils about 9 g.","Lentils still win elsewhere: they bring fiber, which chicken doesn't have, and they cost much less. Eating legumes and grains over the day gives a good protein balance."],
+  t:"Lentils are a great protein source, just plan bigger portions."},
+ {q:"Sugar makes children hyperactive.",a:false,s:"Controlled studies haven't found that effect.",
+  w:["In double-blind studies, children got either sugar or a sugar-free placebo, and nobody knew which. Their behavior didn't differ.","But parents who believed their child had eaten sugar rated them as more hyperactive. The excitement of parties, where sugar is everywhere, is the more likely cause."],
+  t:"Sugar has real downsides, but hyperactivity isn't one that's been shown."}]},
+mind:{name:"Mind",title:"Understand your own mind.",sub:"5 true-or-false cards a day on how your brain really works.",
+ profiles:[["🌀","The Overthinker","You analyze everything twice. Your edge: depth. Your trap: deciding too late."],
+  ["🤝","The People Pleaser","You keep everyone happy. Your trap: your own needs come last."],
+  ["⚡","The Doer","You decide fast and fix things on the way. Your trap: skipping the step that would have saved you time."]],
+ swipes:[["I replay conversations in my head afterwards.",0],["I find it hard to say no.",1],["I decide fast and adjust later.",2],["I worry about what others think of me.",1],["I need all the information before deciding.",0],["I get bored when plans move slowly.",2]],
+ cards:[
+ {q:"We only use 10% of our brain.",a:false,s:"You use virtually all of it.",
+  w:["Brain imaging shows that even simple tasks activate many areas, and over a day almost every region is active.","The brain is about 2% of body weight but uses around 20% of its energy. Evolution wouldn't keep such an expensive organ 90% idle."],
+  t:"There's no hidden 90% to unlock, but you can train the brain you use."},
+ {q:"Having more options makes you happier with your choice.",a:false,s:"Too many options often make us less satisfied.",
+  w:["In a famous supermarket study, a stand with 24 jams drew more visitors, but a stand with 6 jams led to far more purchases.","Later research shows it depends on the situation, but many options often bring more hesitation and more regret, because we keep imagining the ones we didn't pick."],
+  t:"When deciding, narrow it down to 3 good options."},
+ {q:"It takes 21 days to form a habit.",a:false,s:"In a key study, it took 66 days on average.",
+  w:["The “21 days” idea comes from a 1960s book by a plastic surgeon, about patients getting used to their new face.","A 2009 study at University College London followed people building a new habit. It took 66 days on average, anywhere from 18 to 254 days depending on the person and the habit. Missing one day didn't ruin progress."],
+  t:"Expect about two months, and don't quit after a missed day."},
+ {q:"Multitasking makes you more productive.",a:false,s:"Your brain mostly switches between tasks, and each switch costs time.",
+  w:["For tasks that need attention, the brain doesn't run them in parallel. It jumps from one to the other.","Research on “task switching” shows that each jump has a cost: alternating between tasks is slower and causes more errors than doing them one after the other."],
+  t:"Group similar tasks and do one thing at a time."},
+ {q:"Forcing a smile can lift your mood a little.",a:true,s:"Yes, slightly: your face can nudge your feelings.",
+  w:["This is the “facial feedback” idea. It was debated after some studies failed to replicate it.","In 2022, a large international study with thousands of participants found that posing a smile does produce a small boost in happiness. It won't fix a bad day, but the effect is real."],
+  t:"A small effect, but it's free."}]}};
+
+/* ================= STATE ================= */
+const P=new URLSearchParams(location.search);let dom=P.get("d");if(!D[dom])dom=null;
+let S={};try{S=JSON.parse(localStorage.getItem("ds2")||"{}")}catch{}
+const save=()=>{try{localStorage.setItem("ds2",JSON.stringify(S))}catch{}};
+const $=document.getElementById("app");const el=s=>$.querySelector(s);
+const vib=()=>{try{navigator.vibrate&&navigator.vibrate(15)}catch{}};
+const day=(o=0)=>new Date(Date.now()-o*864e5).toISOString().slice(0,10);
+const share=async t=>{try{if(navigator.share)await navigator.share({text:t,url:location.href});else{await navigator.clipboard.writeText(t+" "+location.href);alert("Link copied")}}catch{}};
+const go=d=>{location.search="?d="+d};
+
+/* ================= SCREENS ================= */
+function chooser(){document.body.className="home";
+ $.innerHTML=`<div class="scr"><span class="tag">${NAME}</span><h1 class="big">Pick one topic.<br>Get sharper at it every day.</h1>
+ ${Object.keys(D).map(k=>`<button class="tile" data-k="${k}" style="background:${k=="money"?"#ffd84d":k=="food"?"#a6ec8c":"#cdb8ff"}"><span class="tag">${D[k].name}</span><div class="d">${D[k].title}</div></button>`).join("")}</div>`;
+ $.querySelectorAll(".tile").forEach(b=>b.onclick=()=>go(b.dataset.k))}
+
+function intro(){const d=D[dom];const st=S[dom]||{};
+ if(st.profile!==undefined)return daily();
+ $.innerHTML=`<div class="scr"><span class="tag">${NAME} · ${d.name}</span><div class="sp"></div><h1 class="big">${d.title}</h1><p class="lead">${d.sub}</p><div class="sp"></div>
+ <button class="btn" id="go">Find my ${d.name.toLowerCase()} profile</button><div class="small">6 quick swipes · free</div></div>`;
+ el("#go").onclick=()=>swipe(0,[0,0,0])}
+
+function swipe(i,t){const d=D[dom];if(i>=d.swipes.length)return result(t);
+ $.innerHTML=`<div class="scr"><div class="top"><span>Your ${d.name.toLowerCase()} profile</span><span>${i+1}/${d.swipes.length}</span></div>
+ <div class="prog">${d.swipes.map((_,k)=>`<i class="${k<i?"on":""}"></i>`).join("")}</div>
+ <div class="deck"><div class="card" id="c"><span class="stamp y">ME</span><span class="stamp n">NOT ME</span><div class="d q">${d.swipes[i][0]}</div></div></div>
+ <div class="row"><button class="btn ghost" id="n">Not me</button><button class="btn" id="y">That's me</button></div></div>`;
+ const c=el("#c"),st=c.querySelectorAll(".stamp");
+ const done=y=>{vib();if(y)t[d.swipes[i][1]]++;c.style.transform=`translateX(${y?130:-130}%) rotate(${y?14:-14}deg)`;c.style.opacity=0;setTimeout(()=>swipe(i+1,t),260)};
+ el("#y").onclick=()=>done(1);el("#n").onclick=()=>done(0);
+ let x0=null,dx=0;c.onpointerdown=e=>{x0=e.clientX;dx=0;c.setPointerCapture(e.pointerId);c.style.transition="none"};
+ c.onpointermove=e=>{if(x0===null)return;dx=e.clientX-x0;c.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`;st[0].style.opacity=Math.max(0,dx/90);st[1].style.opacity=Math.max(0,-dx/90)};
+ c.onpointerup=()=>{if(x0===null)return;x0=null;c.style.transition="";if(Math.abs(dx)>80)done(dx>0);else{c.style.transform="";st.forEach(s=>s.style.opacity=0)}}}
+
+function result(t){const d=D[dom];const k=t.indexOf(Math.max(...t));const p=d.profiles[k];S[dom]=Object.assign(S[dom]||{},{profile:k});save();
+ $.innerHTML=`<div class="scr"><span class="tag">Your ${d.name.toLowerCase()} profile</span>
+ <div class="pcard"><div class="e">${p[0]}</div><div class="d">${p[1]}</div><p>${p[2]}</p><div class="small" style="opacity:.7">${NAME}</div></div>
+ <div class="sp"></div><button class="btn" id="nx">Start today's 3-minute session</button><button class="btn ghost mt" id="sh">Share my profile</button></div>`;
+ el("#nx").onclick=daily;el("#sh").onclick=()=>share(`I'm ${p[1]} ${p[0]} on ${NAME}. What's your ${d.name.toLowerCase()} profile?`)}
+
+function paywall(){const d=D[dom];
+ $.innerHTML=`<div class="scr"><span class="tag">${NAME} Premium</span><h1 class="big">One plan.<br>Every topic.</h1>
+ <ul class="perks"><li>📚 5 new cards a day, each with a full explanation</li><li>🔥 Streak, score and a new profile every Sunday</li><li>🧭 Money, Food and Mind, all included</li></ul>
+ <p style="font-weight:600">7 days free, then $39.99/year.</p><p style="font-size:14px;margin:6px 0 14px;opacity:.75">Early test: nobody is charged today. Leave your email to get early access and a launch discount.</p>
+ <input id="em" type="email" placeholder="you@email.com" autocomplete="email" aria-label="Email">
+ <button class="btn" id="tr">Start my free week</button><button class="btn ghost mt" id="sk">Just try today's cards</button></div>`;
+ el("#tr").onclick=()=>{const e=el("#em").value.trim();if(!/^\S+@\S+\.\S+$/.test(e)){el("#em").focus();return}S.email=e;save();send("waitlist",{email:e});daily()};
+ el("#sk").onclick=()=>{S[dom].skip=1;save();daily()}}
+
+function daily(){const d=D[dom];let i=0,score=0;
+ $.innerHTML=`<div class="feed" id="f"></div>`;const f=el("#f");
+ const prog=n=>`<div class="prog">${d.cards.map((_,k)=>`<i class="${k<n?"on":""}"></i>`).join("")}</div>`;
+ function ask(quiet){const c=d.cards[i];const s=document.createElement("section");s.className="scr"+(i%2?" alt":"");
+  s.innerHTML=`<div class="top"><span>${d.name} · today</span><span>${i+1}/${d.cards.length}</span></div>${prog(i)}<div class="tag" style="margin-top:22px">True or false?</div><div class="d q">${c.q}</div><div class="row"><button class="btn" data-a="1">True</button><button class="btn ghost" data-a="0">False</button></div>`;
+  f.appendChild(s);if(!quiet)s.scrollIntoView({behavior:"smooth"});
+  s.querySelector(".row").onclick=e=>{const a=e.target.dataset.a;if(a===undefined)return;const ok=(a==="1")===c.a;if(ok)score++;vib();
+   // step 1: verdict
+   s.querySelector(".row").outerHTML=`<div><div class="d verdict">${ok?"Yes!":"Nope."}</div><span class="pill">It's ${c.a?"TRUE":"FALSE"}</span><p class="lead mt">${c.s}</p><div class="hint">Why? Scroll ↑</div></div>`;
+   s.querySelector(".q").style.margin="18px 0 0";
+   // step 2: detailed explanation
+   const w=document.createElement("section");w.className="scr dark why";
+   w.innerHTML=`<div class="top"><span>Why it's ${c.a?"true":"false"}</span><span>${i+1}/${d.cards.length}</span></div>${prog(i+1)}<h2>The explanation</h2>${c.w.map(p=>`<p class="mt">${p}</p>`).join("")}<div class="take mt"><b>Remember</b>${c.t}</div><div class="hint">${i+1<d.cards.length?"Next card":"Your score"} ↑</div>`;
+   f.appendChild(w);i++;i<d.cards.length?ask(1):end()}}
+ function end(){const st=S[dom];if(st.last!==day()){st.streak=st.last===day(1)?(st.streak||0)+1:1;st.last=day();save();send("plays",{score,details:{d:dom,profile:st.profile,streak:st.streak}})}
+  const others=Object.keys(D).filter(k=>k!==dom);const s=document.createElement("section");s.className="scr";
+  s.innerHTML=`<span class="tag">Today's score · ${d.name}</span><div class="sp"></div><div class="d" style="font-size:110px;line-height:1">${score}/${d.cards.length}</div><p class="d" style="font-size:26px">🔥 ${st.streak}-day streak</p><p class="lead mt">5 new cards tomorrow.</p><div class="sp"></div>
+  <div id="keep"><p class="d" style="font-size:22px;margin-bottom:8px">Keep your streak alive</p><p style="font-size:15px;margin-bottom:10px">Get tomorrow's cards by email. Free, unsubscribe anytime.</p>
+  <input id="em" type="email" placeholder="you@email.com" autocomplete="email" aria-label="Email"><button class="btn" id="kp">Send me tomorrow's cards</button></div>
+  <button class="btn ghost mt" id="sh">Share my score</button><p class="small" style="margin:14px 0 8px">Try another topic</p><div class="row">${others.map(k=>`<button class="btn ghost" data-k="${k}">${D[k].name}</button>`).join("")}</div>`;
+  f.appendChild(s);s.scrollIntoView({behavior:"smooth"});
+  s.querySelector("#sh").onclick=()=>share(`${score}/${d.cards.length} on today's ${d.name} cards, ${st.streak}-day streak 🔥 ${NAME}`);
+  s.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>go(b.dataset.k));
+  const keep=s.querySelector("#keep");if(S.email)founder(keep);
+  s.querySelector("#kp").onclick=()=>{const e=s.querySelector("#em").value.trim();if(!/^\S+@\S+\.\S+$/.test(e)){s.querySelector("#em").focus();return}S.email=e;save();send("waitlist",{email:e,score});founder(keep)}}
+ function founder(k){k.innerHTML=`<p class="d" style="font-size:22px">You're in ✓</p><p style="font-size:15px;margin:4px 0 10px">Want all 3 topics, unlimited cards and your weekly profile? Founding members get 50% off for life when Premium launches.</p><button class="btn" id="fd">Reserve my founder spot</button><p class="small" style="margin-top:6px">No payment now.</p>`;
+  k.querySelector("#fd").onclick=()=>{if(!S.fd){S.fd=1;save();send("plays",{score:0,details:{event:"founder_click",d:dom}})}k.innerHTML=`<p class="d" style="font-size:22px">Spot reserved 🎉</p><p style="font-size:15px">We'll email you before launch.</p>`}}
+ ask()}
+
+if(!dom)chooser();else{document.body.className=dom;intro()}
+</script></body></html>
