@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Scrollwise</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#17130f">
@@ -16,7 +16,7 @@ body.food{--bg:#a6ec8c;--bg2:#6fd49a;--ink:#06240f;--soft:#eaffe0}
 body.home{--bg:#17130f;--ink:#fff6e8;--soft:#2a241d}
 body.mind{--bg:#cdb8ff;--bg2:#f2a7d8;--ink:#1d0b3d;--soft:#f4edff}
 *{box-sizing:border-box;margin:0}html,body{height:100%}
-body{font:16px/1.5 Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);-webkit-tap-highlight-color:transparent}
+body{font:16px/1.5 Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 button{font:inherit;cursor:pointer;border:0;color:inherit}
 button:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
 h1,.d{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:800;letter-spacing:-.01em}
@@ -66,11 +66,10 @@ h1,.d{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:800;let
 ul.perks{list-style:none;padding:0;margin:18px 0}ul.perks li{padding:10px 0;border-bottom:2px solid rgba(0,0,0,.1);font-weight:600}
 input{width:100%;padding:16px;border-radius:16px;border:2.5px solid var(--ink);background:var(--soft);font:inherit;color:var(--ink);margin-bottom:10px}
 /* install prompt */
-#inst{position:fixed;left:12px;right:12px;top:max(12px,env(safe-area-inset-top));max-width:496px;margin:0 auto;z-index:20;background:#17130f;color:#fff6e8;border-radius:20px;padding:14px 14px 14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 12px 30px rgba(0,0,0,.35);font-size:15px}
-#inst img{width:40px;height:40px;border-radius:10px}
-#inst b{display:block;font-size:15px}#inst span{opacity:.75;font-size:13px}
-#inst .go{background:#ffd84d;color:#1a1300;border-radius:12px;padding:10px 14px;font-weight:700;white-space:nowrap}
-#inst .x{background:none;color:#fff6e8;opacity:.6;font-size:22px;padding:0 4px}
+#inst{position:fixed;left:50%;transform:translateX(-50%);top:max(10px,env(safe-area-inset-top));z-index:20;background:#17130f;color:#fff6e8;border-radius:99px;padding:6px 6px 6px 8px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.3);font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer}
+#inst img{width:28px;height:28px;border-radius:8px}
+#inst .go{background:#ffd84d;color:#1a1300;border-radius:99px;padding:7px 12px;font-weight:700}
+body.inst .scr{padding-top:max(66px,calc(env(safe-area-inset-top) + 56px))}
 #ios{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
 #ios>div{background:#fff6e8;color:#1a1300;border-radius:24px 24px 0 0;padding:24px 22px max(28px,env(safe-area-inset-bottom));max-width:520px;width:100%}
 #ios ol{margin:14px 0 18px;padding-left:22px;font-size:17px;line-height:1.7}
@@ -245,8 +244,7 @@ function intro(){const d=D[dom];const st=S[dom]||{};
  <button class="btn" id="go">Find my ${d.name.toLowerCase()} profile</button><div class="small">6 quick swipes · free</div></div>`;
  el("#go").onclick=()=>swipe(0,[0,0,0])}
 
-function hideInst(){const b=document.getElementById("inst");if(b)b.remove()}
-function swipe(i,t){hideInst();const d=D[dom];if(i>=d.swipes.length)return result(t);
+function swipe(i,t){const d=D[dom];if(i>=d.swipes.length)return result(t);
  $.innerHTML=`<div class="scr"><div class="top"><span>Your ${d.name.toLowerCase()} profile</span><span>${i+1}/${d.swipes.length}</span></div>
  <div class="prog">${d.swipes.map((_,k)=>`<i class="${k<i?"on":""}"></i>`).join("")}</div>
  <div class="deck"><div class="card" id="c"><span class="stamp y">ME</span><span class="stamp n">NOT ME</span><div class="d q">${d.swipes[i][0]}</div></div></div>
@@ -276,7 +274,7 @@ function paywall(){const d=D[dom];
 function mix(c){const t=c.filter(x=>x.a),f=c.filter(x=>!x.a),r=[];let a=0,b=0;while(r.length<c.length){if(a<t.length&&(b>=f.length||a/t.length<=b/f.length))r.push(t[a++]);else r.push(f[b++])}return r}
 function daily(){const st0=S[dom]||(S[dom]={});if(!st0.start){st0.start=day();save()}
  const all=mix(D[dom].cards),sets=Math.floor(all.length/5),k=Math.round((Date.parse(day())-Date.parse(st0.start))/864e5)%sets;
- const d={...D[dom],cards:all.slice(k*5,k*5+5)};let i=0,score=0;hideInst();
+ const d={...D[dom],cards:all.slice(k*5,k*5+5)};let i=0,score=0;
  $.innerHTML=`<div class="feed" id="f"></div>`;const f=el("#f");
  const prog=n=>`<div class="prog">${d.cards.map((_,k)=>`<i class="${k<n?"on":""}"></i>`).join("")}</div>`;
  function ask(quiet){const c=d.cards[i];const s=document.createElement("section");s.className="scr"+(i%2?" alt":"");
@@ -296,7 +294,7 @@ function daily(){const st0=S[dom]||(S[dom]={});if(!st0.start){st0.start=day();sa
   <div id="keep"><p class="d" style="font-size:22px;margin-bottom:8px">Keep your streak alive</p><p style="font-size:15px;margin-bottom:10px">Get tomorrow's cards by email. Free, unsubscribe anytime.</p>
   <input id="em" type="email" placeholder="you@email.com" autocomplete="email" aria-label="Email"><button class="btn" id="kp">Send me tomorrow's cards</button></div>
   <button class="btn ghost mt" id="sh">Share my score</button><p class="small" style="margin:14px 0 8px">Try another topic</p><div class="row">${others.map(k=>`<button class="btn ghost" data-k="${k}">${D[k].name}</button>`).join("")}</div>`;
-  f.appendChild(s);s.scrollIntoView({behavior:"smooth"});setTimeout(installBar,1200);
+  f.appendChild(s);s.scrollIntoView({behavior:"smooth"});
   s.querySelector("#sh").onclick=()=>share(`${score}/${d.cards.length} on today's ${d.name} cards, ${st.streak}-day streak 🔥 ${NAME}`);
   s.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>go(b.dataset.k));
   const keep=s.querySelector("#keep");if(S.email)founder(keep);
@@ -311,23 +309,24 @@ const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==
 let deferred=null;
 const inApp=/Instagram|FBAN|FBAV|TikTok|musical_ly|Snapchat|Twitter/i.test(navigator.userAgent);
 function installBar(){
- if(standalone()||document.getElementById("inst")||document.querySelector(".deck"))return;
- try{if(+localStorage.getItem("sw_inst_x")>Date.now())return}catch{}
- if(!deferred&&!isIOS)return; // browser can't install: show nothing
- const b=document.createElement("div");b.id="inst";
- b.innerHTML=`<img src="icons/icon-192.png" alt=""><div style="flex:1"><b>Get the Scrollwise app</b><span>Free · on your home screen</span></div><button class="go">Install</button><button class="x" aria-label="Not now">×</button>`;
- document.body.appendChild(b);
- b.querySelector(".x").onclick=()=>{b.remove();try{localStorage.setItem("sw_inst_x",Date.now()+3*864e5)}catch{}};
- b.querySelector(".go").onclick=async()=>{
-  if(deferred){deferred.prompt();const r=await deferred.userChoice;deferred=null;b.remove();if(r.outcome==="accepted")send("plays",{score:0,details:{event:"install",d:dom}});return}
+ if(standalone()||document.getElementById("inst"))return;
+ if(!deferred&&!isIOS)return; // this browser can't install: show nothing
+ const b=document.createElement("button");b.id="inst";b.setAttribute("aria-label","Install the Scrollwise app");
+ b.innerHTML=`<img src="icons/icon-192.png" alt="">Get the app<span class="go">Install</span>`;
+ document.body.appendChild(b);document.body.classList.add("inst");
+ b.onclick=async()=>{
+  if(deferred){deferred.prompt();const r=await deferred.userChoice;deferred=null;if(r.outcome==="accepted"){removeInst();send("plays",{score:0,details:{event:"install",d:dom}})}return}
   const m=document.createElement("div");m.id="ios";
   m.innerHTML=`<div><h2 class="d" style="font-size:26px">Add Scrollwise to your home screen</h2>${inApp?`<p style="margin-top:10px;font-weight:600">First, open this page in Safari: tap the <b>•••</b> menu, then <b>Open in browser</b>.</p>`:""}<ol><li>Tap the <b>Share</b> button <span aria-hidden="true">⬆️</span> at the bottom of Safari</li><li>Scroll down and tap <b>Add to Home Screen</b></li><li>Tap <b>Add</b></li></ol><button class="btn" style="background:#1a1300;color:#ffd84d">Got it</button></div>`;
   document.body.appendChild(m);m.onclick=e=>{if(e.target===m||e.target.tagName==="BUTTON")m.remove()}}}
+function removeInst(){const b=document.getElementById("inst");if(b)b.remove();document.body.classList.remove("inst")}
 addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;installBar()});
-addEventListener("appinstalled",()=>{const b=document.getElementById("inst");if(b)b.remove()});
+addEventListener("appinstalled",removeInst);
+document.addEventListener("gesturestart",e=>e.preventDefault());
+document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
 if("serviceWorker"in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
 if(standalone()&&S.io!==day()){S.io=day();save();send("plays",{score:0,details:{event:"open_installed",d:dom}})}
 
 if(!dom)chooser();else{document.body.className=dom;intro()}
-setTimeout(()=>{if(!document.querySelector(".feed,.deck"))installBar()},1500);
+installBar();
 </script></body></html>
