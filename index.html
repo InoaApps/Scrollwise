@@ -49,6 +49,10 @@ h1,.d{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:800;let
 .why p{font-size:18px;line-height:1.55}
 .take{margin-top:auto;margin-bottom:4px;background:var(--bg);color:var(--ink);border-radius:18px;padding:16px 18px;font-weight:600}
 .take+.take{margin-top:10px}
+body .scr{padding-bottom:max(64px,calc(env(safe-area-inset-bottom) + 54px))}
+#lg{position:fixed;right:10px;bottom:max(12px,env(safe-area-inset-bottom));z-index:15;display:flex;gap:6px}
+#lg button{background:rgba(23,19,15,.82);color:#fff6e8;border-radius:99px;padding:5px 9px;font-size:11px;font-weight:500;letter-spacing:.02em;backdrop-filter:blur(6px)}
+#lg b{font-weight:800;text-decoration:underline;text-underline-offset:2px}
 .why .src{margin-top:12px;font-size:13px;opacity:.8}.src a{color:inherit}.src .ev{font-weight:700}
 .take b{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:.65}
 /* swipe card */
@@ -77,6 +81,13 @@ body.inst .scr{padding-top:max(66px,calc(env(safe-area-inset-top) + 56px))}
 #ios ol{margin:14px 0 18px;padding-left:22px;font-size:17px;line-height:1.7}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body><main id="app" aria-live="polite"></main>
+<script>
+var LS=function(k,v){try{return v===undefined?localStorage.getItem(k):localStorage.setItem(k,v)}catch(e){}};
+var LANG=(function(){var s=LS("lang"),q=new URLSearchParams(location.search).get("lang");if(s==="en"||s==="fr")return s;if(q==="en"||q==="fr")return q;return /^fr/i.test(navigator.language||"")?"fr":"en"})();
+var UNITS=(function(){var s=LS("units");if(s==="us"||s==="metric")return s;if(LANG==="fr")return "metric";var l=navigator.language||"en-US";return /^en(-US)?$/i.test(l)?"us":"metric"})();
+document.documentElement.lang=LANG;
+if(LANG==="fr")document.write('<script src="fr.js"><\/script>');
+</script>
 <script src="food.js"></script>
 <script>
 const NAME="Scrollwise";
@@ -229,12 +240,39 @@ mind:{name:"Mind",title:"Understand your own mind.",sub:"5 true-or-false cards a
 /* ================= STATE ================= */
 const P=new URLSearchParams(location.search);let dom=P.get("d");if(!D[dom])dom=null;
 D.food.cards=FOOD_MODULES.flatMap(m=>m.cards); // expert Food program (food.js)
+/* ---- language and units ---- */
+const T=s=>LANG==="fr"&&window.FR&&FR.ui[s]||s;
+// [US English, metric English, metric French, US French]
+const UNIT_ROWS=[
+["Per pound, muscle burns roughly 6 calories a day at rest and fat about 2.","Per kilo, muscle burns roughly 13 calories a day at rest and fat about 4.5.","Par kilo, le muscle brûle environ 13 calories par jour au repos et la graisse environ 4,5.","Par livre, le muscle brûle environ 6 calories par jour au repos et la graisse environ 2."],
+["So gaining 5 pounds of muscle adds only around 20 calories a day.","So gaining 2 kg of muscle adds only around 26 calories a day.","Gagner 2 kg de muscle n'ajoute donc qu'environ 26 calories par jour.","Gagner 5 livres de muscle n'ajoute donc qu'environ 20 calories par jour."],
+["That's the official minimum, about 0.36 g per pound.","That's the official minimum for adults.","C'est le minimum officiel pour un adulte.","C'est le minimum officiel, environ 0,36 g par livre."],
+["around 54 g for a 150 lb adult","around 60 g for a 75 kg adult","soit environ 60 g pour un adulte de 75 kg","soit environ 54 g pour un adulte de 150 livres"],
+["375 to 410 °F","190 to 210 °C","190 à 210 °C","375 à 410 °F"],
+["about 1 oz, 160 to 180 calories","about 30 g, 160 to 180 calories","environ 30 g, 160 à 180 calories","environ 1 once, 160 à 180 calories"],
+["gained about 2 pounds","gained about 1 kg","pris environ 1 kg","pris environ 2 livres"],
+["two 3.5 oz servings of fish","two 100 g servings of fish","deux portions de poisson de 100 g","deux portions de poisson de 3,5 oz"],
+["A 12 oz can of regular soda","A 355 ml can of regular soda","Une canette de 355 ml de soda ordinaire","Une canette de 12 oz de soda ordinaire"],
+["caffeine per ounce (28 g)","caffeine per 28 g","caféine pour 28 g","caféine par once (28 g)"],
+["Three cups of air-popped popcorn have about 100 calories","About 25 g of air-popped popcorn (three big cups) have about 100 calories","Environ 25 g de pop-corn soufflé à l'air (trois grandes tasses) contiennent environ 100 calories","Trois tasses de pop-corn soufflé à l'air contiennent environ 100 calories"]
+];
+function localize(){
+ if(LANG==="fr"&&window.FR){
+  ["money","mind"].forEach(k=>D[k].cards.forEach((c,i)=>{const t=FR[k][i];c.q=t[0];c.s=t[1];c.w=t[2];c.t=t[3]}));
+  FOOD_MODULES.forEach((m,mi)=>{const f=FR.food[mi];m.name=f.name;m.sub=f.sub;m.cards.forEach((c,i)=>{const t=f.cards[i];c.q=t[0];c.s=t[1];c.w=t[2];c.t=t[3];c.x=t[4]})});
+  Object.keys(FR.dom).forEach(k=>{const f=FR.dom[k],d=D[k];d.name=f.name;d.title=f.title;d.sub=f.sub;f.profiles.forEach((p,i)=>{d.profiles[i][1]=p[0];d.profiles[i][2]=p[1]});f.swipes.forEach((t,i)=>{d.swipes[i][0]=t})})
+ }
+ const to=LANG==="fr"?(UNITS==="metric"?2:3):(UNITS==="metric"?1:0);
+ const fix=t=>{if(typeof t!=="string")return t;UNIT_ROWS.forEach(r=>r.forEach((v,j)=>{if(j!==to&&t.includes(v))t=t.split(v).join(r[to])}));return t};
+ Object.keys(D).forEach(k=>D[k].cards.forEach(c=>{c.q=fix(c.q);c.s=fix(c.s);c.t=fix(c.t);if(c.x)c.x=fix(c.x);c.w=c.w.map(fix)}))
+}
+localize();
 let S={};try{S=JSON.parse(localStorage.getItem("ds2")||"{}")}catch{}
 const save=()=>{try{localStorage.setItem("ds2",JSON.stringify(S))}catch{}};
 const $=document.getElementById("app");const el=s=>$.querySelector(s);
 const vib=()=>{try{navigator.vibrate&&navigator.vibrate(15)}catch{}};
 const day=(o=0)=>new Date(Date.now()-o*864e5).toISOString().slice(0,10);
-const share=async t=>{try{if(navigator.share)await navigator.share({text:t,url:location.href});else{await navigator.clipboard.writeText(t+" "+location.href);alert("Link copied")}}catch{}};
+const share=async t=>{try{if(navigator.share)await navigator.share({text:t,url:location.href});else{await navigator.clipboard.writeText(t+" "+location.href);alert(T("Link copied"))}}catch{}};
 const go=d=>{location.search="?d="+d};
 
 /* ================= SCREENS ================= */
@@ -246,7 +284,7 @@ function chooser(){document.body.className="home";
 function intro(){const d=D[dom];const st=S[dom]||{};
  if(st.profile!==undefined)return daily();
  $.innerHTML=`<div class="scr"><span class="tag">${NAME} · ${d.name}</span><div class="sp"></div><h1 class="big">${d.title}</h1><p class="lead">${d.sub}</p><div class="sp"></div>
- <button class="btn" id="go">Find my ${d.name.toLowerCase()} profile</button><div class="small">6 quick swipes · free</div></div>`;
+ <button class="btn" id="go">Find my ${d.name.toLowerCase()} profile</button><div class="small">${dom==="food"?"5 quick questions · free":"6 quick swipes · free"}</div></div>`;
  el("#go").onclick=()=>dom==="food"?fquiz(0,[]):swipe(0,[0,0,0])}
 
 function swipe(i,t){const d=D[dom];if(i>=d.swipes.length)return result(t);
@@ -265,7 +303,7 @@ function result(t){const d=D[dom];const k=t.indexOf(Math.max(...t));const p=d.pr
  $.innerHTML=`<div class="scr"><span class="tag">Your ${d.name.toLowerCase()} profile</span>
  <div class="pcard"><div class="e">${p[0]}</div><div class="d">${p[1]}</div><p>${p[2]}</p><div class="small" style="opacity:.7">${NAME}</div></div>
  <div class="sp"></div><button class="btn" id="nx">${dom==="food"&&S.food&&S.food.plan?"See my week plan":"Start today's 3-minute session"}</button><button class="btn ghost mt" id="sh">Share my profile</button></div>`;
- el("#nx").onclick=dom==="food"&&S.food.plan?plan:daily;el("#sh").onclick=()=>{ev("share",{kind:"profile",d:dom,profile:k});share(`I'm ${p[1]} ${p[0]} on ${NAME}. What's your ${d.name.toLowerCase()} profile?`)}}
+ el("#nx").onclick=dom==="food"&&S.food.plan?plan:daily;el("#sh").onclick=()=>{ev("share",{kind:"profile",d:dom,profile:k});share(LANG==="fr"?FR.share.profile(p,d.name,NAME):`I'm ${p[1]} ${p[0]} on ${NAME}. What's your ${d.name.toLowerCase()} profile?`)}}
 
 // ---- Food expert: 5-question profile and weekly plan ----
 const FQ=[["What's your main goal?",["Eat healthier","Lose weight","Have more energy","Shop smarter"]],
@@ -286,7 +324,7 @@ function fquiz(i,a){
  $.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{vib();a[i]=q[1][b.dataset.o];fquiz(i+1,a)})}
 function plan(){const st=S.food,p=st.plan;
  const days=p.mods.map(m=>FOOD_MODULES[m-1]);
- $.innerHTML=`<div class="scr"><span class="tag">Your week plan · Food</span><h1 class="big" style="font-size:36px">One small action a day.</h1>
+ $.innerHTML=`<div class="scr"><span class="tag">Your week plan · ${D.food.name}</span><h1 class="big" style="font-size:36px">One small action a day.</h1>
  <p class="lead">Built for you: goal "${st.prof[0]}", biggest obstacle "${st.prof[1]}".</p>
  <div id="pl">${days.map((m,d)=>`<label class="take" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin-top:10px"><input type="checkbox" data-d="${d}" ${p.done.includes(d)?"checked":""} style="width:24px;height:24px;flex:none;margin-top:2px"><span style="flex:1"><b>Day ${d+1} · ${m.name}</b>${PLANX[m.id]}</span></label>`).join("")}</div>
  <div class="sp"></div><button class="btn" id="nx">Start today's 3-minute session</button></div>`;
@@ -326,12 +364,12 @@ function daily(){const st0=S[dom]||(S[dom]={});if(!st0.start){st0.start=day();sa
   <input id="em" type="email" placeholder="you@email.com" autocomplete="email" aria-label="Email"><button class="btn" id="kp">Send me tomorrow's cards</button></div>
   <button class="btn ghost mt" id="sh">Share my score</button><p class="small" style="margin:14px 0 8px">Try another topic</p><div class="row">${others.map(k=>`<button class="btn ghost" data-k="${k}">${D[k].name}</button>`).join("")}</div>`;
   f.appendChild(s);s.scrollIntoView({behavior:"smooth"});
-  s.querySelector("#sh").onclick=()=>{ev("share",{kind:"score",score,d:dom});share(`${score}/${d.cards.length} on today's ${d.name} cards, ${st.streak}-day streak 🔥 ${NAME}`)};
+  s.querySelector("#sh").onclick=()=>{ev("share",{kind:"score",score,d:dom});share(LANG==="fr"?FR.share.score(score,d.cards.length,d.name,st.streak,NAME):`${score}/${d.cards.length} on today's ${d.name} cards, ${st.streak}-day streak 🔥 ${NAME}`)};
   s.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>go(b.dataset.k));
   const keep=s.querySelector("#keep");if(S.email)founder(keep);
   s.querySelector("#kp").onclick=()=>{const e=s.querySelector("#em").value.trim();if(!/^\S+@\S+\.\S+$/.test(e)){s.querySelector("#em").focus();return}S.email=e;save();send("waitlist",{email:e,score});founder(keep)}}
  function founder(k){k.innerHTML=`<p class="d" style="font-size:22px">You're in ✓</p><p style="font-size:15px;margin:4px 0 10px">Scrollwise Premium: all 3 topics, unlimited cards and your weekly profile.</p><p class="d" style="font-size:24px;margin-bottom:10px">Founder price <span style="font-size:28px">$19.99/year</span> <s style="opacity:.55;font-size:18px">$39.99</s></p><button class="btn" id="fd">Get the founder price</button><p class="small" style="margin-top:6px">No payment today.</p>`;
-  k.querySelector("#fd").onclick=()=>{if(!S.fd){S.fd=1;save();ev("offer_click",{price:19.99,d:dom})}k.innerHTML=`<p class="d" style="font-size:22px">Coming soon 🎉</p><p style="font-size:15px">You're on the list for the $19.99 founder price. We'll email you at launch. Nothing was charged.</p>`}}
+  k.querySelector("#fd").onclick=()=>{if(!S.fd){S.fd=1;save();ev("offer_click",{price:LANG==="fr"?20:19.99,currency:LANG==="fr"?"EUR":"USD",d:dom,lang:LANG})}k.innerHTML=`<p class="d" style="font-size:22px">Coming soon 🎉</p><p style="font-size:15px">You're on the list for the $19.99 founder price. We'll email you at launch. Nothing was charged.</p>`}}
  ask()}
 
 /* ================= INSTALL (PWA) ================= */
@@ -349,7 +387,8 @@ function installBar(){
  b.onclick=async()=>{
   if(deferred){deferred.prompt();const r=await deferred.userChoice;deferred=null;if(r.outcome==="accepted"){removeInst();ev("install",{d:dom})}return}
   const m=document.createElement("div");m.id="ios";
-  m.innerHTML=`<div><h2 class="d" style="font-size:26px">Add Scrollwise to your home screen</h2>${inApp?`<p style="margin-top:10px;font-weight:600">First, open this page in Safari: tap the <b>•••</b> menu, then <b>Open in browser</b>.</p>`:""}<ol><li>Tap the <b>Share</b> button <span aria-hidden="true">⬆️</span> at the bottom of Safari</li><li>Scroll down and tap <b>Add to Home Screen</b></li><li>Tap <b>Add</b></li></ol>${navigator.share&&!inApp?`<button class="btn" id="osh" style="background:#ffd84d;color:#1a1300;margin-bottom:10px">Open share menu</button>`:""}<button class="btn" id="gotit" style="background:#1a1300;color:#ffd84d">Got it</button></div>`;
+  const f=LANG==="fr"&&window.FR&&FR.ios;
+  m.innerHTML=`<div><h2 class="d" style="font-size:26px">${f?f.title:"Add Scrollwise to your home screen"}</h2>${inApp?`<p style="margin-top:10px;font-weight:600">${f?f.safari:"First, open this page in Safari: tap the <b>•••</b> menu, then <b>Open in browser</b>."}</p>`:""}<ol>${f?f.steps:`<li>Tap the <b>Share</b> button <span aria-hidden="true">⬆️</span> at the bottom of Safari</li><li>Scroll down and tap <b>Add to Home Screen</b></li><li>Tap <b>Add</b></li>`}</ol>${navigator.share&&!inApp?`<button class="btn" id="osh" style="background:#ffd84d;color:#1a1300;margin-bottom:10px">${f?f.share:"Open share menu"}</button>`:""}<button class="btn" id="gotit" style="background:#1a1300;color:#ffd84d">${f?f.gotit:"Got it"}</button></div>`;
   document.body.appendChild(m);const o=m.querySelector("#osh");if(o)o.onclick=()=>navigator.share({title:NAME,url:location.href}).catch(()=>{});m.onclick=e=>{if(e.target===m||e.target.id==="gotit")m.remove()}}}
 function removeInst(){const b=document.getElementById("inst");if(b)b.remove();document.body.classList.remove("inst")}
 addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;installBar()});
@@ -359,6 +398,18 @@ document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
 if("serviceWorker"in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
 if(standalone()&&S.io!==day()){S.io=day();save();ev("open_installed",{d:dom})}
 
+/* ---- DOM translator (French) and selectors ---- */
+function trS(c){if(FR.ui[c])return FR.ui[c];for(const r of FR.rx){if(r[0].test(c))return c.replace(r[0],r[1])}return c}
+function trNode(n){
+ if(n.nodeType===3){const v=n.nodeValue,c=v.trim();if(!c)return;const r=trS(c);if(r!==c)n.nodeValue=v.replace(c,()=>r)}
+ else if(n.nodeType===1){["aria-label","placeholder"].forEach(a=>{if(n.hasAttribute(a)){const v=n.getAttribute(a),r=trS(v);if(r!==v)n.setAttribute(a,r)}});n.childNodes.forEach(trNode)}}
+if(LANG==="fr"&&window.FR)new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(trNode))).observe(document.body,{childList:true,subtree:true});
+(function(){const w=document.createElement("div");w.id="lg";
+ const on=(a,b,x)=>x?`<b>${a}</b> · ${b}`:`${a} · <b>${b}</b>`;
+ w.innerHTML=`<button id="lgb" aria-label="Language / Langue">${on("EN","FR",LANG==="en")}</button><button id="unb" aria-label="Units / Unités">${on("lb","kg",UNITS==="us")}</button>`;
+ document.body.appendChild(w);
+ w.querySelector("#lgb").onclick=()=>{LS("lang",LANG==="en"?"fr":"en");LS("units",LANG==="en"?"metric":"us");location.reload()};
+ w.querySelector("#unb").onclick=()=>{LS("units",UNITS==="us"?"metric":"us");location.reload()}})();
 if(!dom)chooser();else{document.body.className=dom;intro()}
 installBar();
 </script></body></html>
