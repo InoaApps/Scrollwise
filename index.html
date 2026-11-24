@@ -80,6 +80,7 @@ const NAME="Scrollwise";
 const SB_URL="https://mgfishwtcbpsuqdbhpia.supabase.co",SB_KEY="sb_publishable_X0ga4Q-22xxn8L-z6eTVCw_xr7CCDdc",APP_ID="scroll-app";
 let PLAYER;try{PLAYER=localStorage.getItem("ds_pid")||crypto.randomUUID();localStorage.setItem("ds_pid",PLAYER)}catch{PLAYER=crypto.randomUUID()}
 function send(table,row){try{fetch(SB_URL+"/rest/v1/"+table,{method:"POST",keepalive:true,headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({app:APP_ID,player_id:PLAYER,...row})}).catch(()=>{})}catch{}}
+function ev(name,details){send("events",{name,details})}
 
 /* ================= CONTENT ================= */
 const D={
@@ -260,7 +261,7 @@ function result(t){const d=D[dom];const k=t.indexOf(Math.max(...t));const p=d.pr
  $.innerHTML=`<div class="scr"><span class="tag">Your ${d.name.toLowerCase()} profile</span>
  <div class="pcard"><div class="e">${p[0]}</div><div class="d">${p[1]}</div><p>${p[2]}</p><div class="small" style="opacity:.7">${NAME}</div></div>
  <div class="sp"></div><button class="btn" id="nx">Start today's 3-minute session</button><button class="btn ghost mt" id="sh">Share my profile</button></div>`;
- el("#nx").onclick=daily;el("#sh").onclick=()=>{send("plays",{score:0,details:{event:"share_profile",d:dom,profile:k}});share(`I'm ${p[1]} ${p[0]} on ${NAME}. What's your ${d.name.toLowerCase()} profile?`)}}
+ el("#nx").onclick=daily;el("#sh").onclick=()=>{ev("share",{kind:"profile",d:dom,profile:k});share(`I'm ${p[1]} ${p[0]} on ${NAME}. What's your ${d.name.toLowerCase()} profile?`)}}
 
 function paywall(){const d=D[dom];
  $.innerHTML=`<div class="scr"><span class="tag">${NAME} Premium</span><h1 class="big">One plan.<br>Every topic.</h1>
@@ -295,12 +296,12 @@ function daily(){const st0=S[dom]||(S[dom]={});if(!st0.start){st0.start=day();sa
   <input id="em" type="email" placeholder="you@email.com" autocomplete="email" aria-label="Email"><button class="btn" id="kp">Send me tomorrow's cards</button></div>
   <button class="btn ghost mt" id="sh">Share my score</button><p class="small" style="margin:14px 0 8px">Try another topic</p><div class="row">${others.map(k=>`<button class="btn ghost" data-k="${k}">${D[k].name}</button>`).join("")}</div>`;
   f.appendChild(s);s.scrollIntoView({behavior:"smooth"});
-  s.querySelector("#sh").onclick=()=>{send("plays",{score,details:{event:"share_score",d:dom}});share(`${score}/${d.cards.length} on today's ${d.name} cards, ${st.streak}-day streak 🔥 ${NAME}`)};
+  s.querySelector("#sh").onclick=()=>{ev("share",{kind:"score",score,d:dom});share(`${score}/${d.cards.length} on today's ${d.name} cards, ${st.streak}-day streak 🔥 ${NAME}`)};
   s.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>go(b.dataset.k));
   const keep=s.querySelector("#keep");if(S.email)founder(keep);
   s.querySelector("#kp").onclick=()=>{const e=s.querySelector("#em").value.trim();if(!/^\S+@\S+\.\S+$/.test(e)){s.querySelector("#em").focus();return}S.email=e;save();send("waitlist",{email:e,score});founder(keep)}}
  function founder(k){k.innerHTML=`<p class="d" style="font-size:22px">You're in ✓</p><p style="font-size:15px;margin:4px 0 10px">Scrollwise Premium: all 3 topics, unlimited cards and your weekly profile.</p><p class="d" style="font-size:24px;margin-bottom:10px">Founder price <span style="font-size:28px">$19.99/year</span> <s style="opacity:.55;font-size:18px">$39.99</s></p><button class="btn" id="fd">Get the founder price</button><p class="small" style="margin-top:6px">No payment today.</p>`;
-  k.querySelector("#fd").onclick=()=>{if(!S.fd){S.fd=1;save();send("plays",{score:0,details:{event:"founder_click",price:19.99,d:dom}})}k.innerHTML=`<p class="d" style="font-size:22px">Coming soon 🎉</p><p style="font-size:15px">You're on the list for the $19.99 founder price. We'll email you at launch. Nothing was charged.</p>`}}
+  k.querySelector("#fd").onclick=()=>{if(!S.fd){S.fd=1;save();ev("offer_click",{price:19.99,d:dom})}k.innerHTML=`<p class="d" style="font-size:22px">Coming soon 🎉</p><p style="font-size:15px">You're on the list for the $19.99 founder price. We'll email you at launch. Nothing was charged.</p>`}}
  ask()}
 
 /* ================= INSTALL (PWA) ================= */
@@ -315,7 +316,7 @@ function installBar(){
  b.innerHTML=`<img src="icons/icon-192.png" alt="">Get the app<span class="go">Install</span>`;
  document.body.appendChild(b);document.body.classList.add("inst");
  b.onclick=async()=>{
-  if(deferred){deferred.prompt();const r=await deferred.userChoice;deferred=null;if(r.outcome==="accepted"){removeInst();send("plays",{score:0,details:{event:"install",d:dom}})}return}
+  if(deferred){deferred.prompt();const r=await deferred.userChoice;deferred=null;if(r.outcome==="accepted"){removeInst();ev("install",{d:dom})}return}
   const m=document.createElement("div");m.id="ios";
   m.innerHTML=`<div><h2 class="d" style="font-size:26px">Add Scrollwise to your home screen</h2>${inApp?`<p style="margin-top:10px;font-weight:600">First, open this page in Safari: tap the <b>•••</b> menu, then <b>Open in browser</b>.</p>`:""}<ol><li>Tap the <b>Share</b> button <span aria-hidden="true">⬆️</span> at the bottom of Safari</li><li>Scroll down and tap <b>Add to Home Screen</b></li><li>Tap <b>Add</b></li></ol><button class="btn" style="background:#1a1300;color:#ffd84d">Got it</button></div>`;
   document.body.appendChild(m);m.onclick=e=>{if(e.target===m||e.target.tagName==="BUTTON")m.remove()}}}
@@ -325,7 +326,7 @@ addEventListener("appinstalled",removeInst);
 document.addEventListener("gesturestart",e=>e.preventDefault());
 document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
 if("serviceWorker"in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
-if(standalone()&&S.io!==day()){S.io=day();save();send("plays",{score:0,details:{event:"open_installed",d:dom}})}
+if(standalone()&&S.io!==day()){S.io=day();save();ev("open_installed",{d:dom})}
 
 if(!dom)chooser();else{document.body.className=dom;intro()}
 installBar();
