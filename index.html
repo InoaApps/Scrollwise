@@ -328,9 +328,108 @@ function plan(){const st=S.food,p=st.plan;
  $.innerHTML=`<div class="scr"><span class="tag">Your week plan · ${D.food.name}</span><h1 class="big" style="font-size:36px">One small action a day.</h1>
  <p class="lead">Built for you: goal "${st.prof[0]}", biggest obstacle "${st.prof[1]}".</p>
  <div id="pl">${days.map((m,d)=>`<label class="take" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin-top:10px"><input type="checkbox" data-d="${d}" ${p.done.includes(d)?"checked":""} style="width:24px;height:24px;flex:none;margin-top:2px"><span style="flex:1"><b>Day ${d+1} · ${m.name}</b>${PLANX[m.id]}</span></label>`).join("")}</div>
- <div class="sp"></div><button class="btn" id="nx">Start today's 3-minute session</button></div>`;
- $.querySelectorAll("[data-d]").forEach(c=>c.onchange=()=>{const d=+c.dataset.d;p.done=p.done.filter(x=>x!==d);if(c.checked){p.done.push(d);ev("plan_action",{d:"food",day:d+1})}save()});
+ <div class="sp"></div><button class="btn" id="nx">Start today's 3-minute session</button><button class="btn ghost mt" id="tl">Food tools</button></div>`;
+ el("#tl").onclick=()=>ftools("plan");$.querySelectorAll("[data-d]").forEach(c=>c.onchange=()=>{const d=+c.dataset.d;p.done=p.done.filter(x=>x!==d);if(c.checked){p.done.push(d);ev("plan_action",{d:"food",day:d+1})}save()});
  el("#nx").onclick=daily}
+
+// ---- Food tools: Label decoder, Swap finder, Daily targets ----
+const L=(en,fr)=>LANG==="fr"?fr:en;
+const SWAPS=[
+["Flavored yogurt","Plain yogurt + fresh fruit","Often 3 times less added sugar.","Yaourt aromatisé","Yaourt nature + fruits frais","Souvent 3 fois moins de sucre ajouté."],
+["Sugary breakfast cereal","Plain oats + banana","More fiber, far less added sugar.","Céréales sucrées","Flocons d'avoine + banane","Plus de fibres, bien moins de sucre ajouté."],
+["Soda","Sparkling water + lemon","Saves about 10 teaspoons of sugar per can.","Soda","Eau gazeuse + citron","Économise environ 10 cuillères à café de sucre par canette."],
+["Fruit juice","Whole fruit","Keeps the fiber and fills you up more.","Jus de fruit","Fruit entier","Garde les fibres et rassasie davantage."],
+["Energy drink","Coffee or tea, unsweetened","Same caffeine, no added sugar.","Boisson énergisante","Café ou thé non sucré","Même caféine, sans sucre ajouté."],
+["Sweetened iced tea","Cold-brewed tea + lemon","Same refreshment, no sugar.","Thé glacé sucré","Thé infusé à froid + citron","Même fraîcheur, sans sucre."],
+["White bread","Whole-grain bread","More fiber and a slower rise in blood sugar.","Pain blanc","Pain complet","Plus de fibres, glycémie qui monte plus lentement."],
+["White rice","Brown rice or lentils","More fiber and protein.","Riz blanc","Riz complet ou lentilles","Plus de fibres et de protéines."],
+["Potato chips","Unsalted nuts or popcorn","Less sodium, more fiber and protein.","Chips","Noix non salées ou pop-corn","Moins de sodium, plus de fibres et de protéines."],
+["Cookies","Dark chocolate + a handful of nuts","Less sugar, and it satisfies for longer.","Biscuits","Chocolat noir + une poignée de noix","Moins de sucre, et cale plus longtemps."],
+["Granola bar","Apple + peanut butter","Fewer additives and more protein.","Barre de céréales","Pomme + beurre de cacahuète","Moins d'additifs et plus de protéines."],
+["Candy","Frozen grapes or dates","Sweet fix with fiber and no additives.","Bonbons","Raisins surgelés ou dattes","Envie de sucre avec des fibres, sans additifs."],
+["Ice cream","Frozen banana blended","One ingredient, no added sugar.","Glace","Banane congelée mixée","Un seul ingrédient, sans sucre ajouté."],
+["Butter for cooking","Olive oil","Less saturated fat, more unsaturated fat.","Beurre pour cuisiner","Huile d'olive","Moins de graisses saturées, plus d'insaturées."],
+["Mayonnaise","Greek yogurt + mustard","Fewer calories and more protein.","Mayonnaise","Yaourt grec + moutarde","Moins de calories et plus de protéines."],
+["Creamy salad dressing","Olive oil + vinegar + lemon","No added sugar or thickeners.","Sauce salade crémeuse","Huile d'olive + vinaigre + citron","Pas de sucre ajouté ni d'épaississants."],
+["Ketchup","Plain tomato sauce + herbs","Much less added sugar.","Ketchup","Coulis de tomate nature + herbes","Bien moins de sucre ajouté."],
+["Pasta sauce from a jar","Canned tomatoes + garlic","Less sugar and sodium, ready in 10 minutes.","Sauce pasta en bocal","Tomates en conserve + ail","Moins de sucre et de sodium, prête en 10 minutes."],
+["Instant noodles","Plain noodles + an egg + vegetables","Much less sodium, more protein.","Nouilles instantanées","Nouilles nature + œuf + légumes","Bien moins de sodium, plus de protéines."],
+["Deli meat","Roasted chicken or boiled eggs","Less sodium and fewer preservatives.","Charcuterie","Poulet rôti ou œufs durs","Moins de sodium et de conservateurs."],
+["Bacon","Smoked salmon or eggs","Less saturated fat and processed meat.","Bacon","Saumon fumé ou œufs","Moins de graisses saturées et de viande transformée."],
+["Fried chicken nuggets","Oven-baked chicken breast","Less fat and fewer ingredients.","Nuggets de poulet frits","Blanc de poulet au four","Moins de gras et moins d'ingrédients."],
+["Frozen pizza","Whole-wheat wrap + sauce + cheese","You control the salt and the fat.","Pizza surgelée","Wrap complet + sauce + fromage","Tu contrôles le sel et le gras."],
+["Fast-food burger","Homemade burger, whole-wheat bun","Fewer calories and half the sodium.","Burger de fast-food","Burger maison, pain complet","Moins de calories et moitié moins de sodium."],
+["French fries","Oven-baked potato wedges","Same taste, far less oil.","Frites","Quartiers de pommes de terre au four","Même goût, bien moins d'huile."],
+["Sweetened coffee drink","Coffee + milk, 1 teaspoon of sugar","Saves 20 to 40 g of sugar.","Café sucré en boutique","Café + lait, 1 cuillère à café de sucre","Économise 20 à 40 g de sucre."],
+["Flavored instant oatmeal","Plain oats + cinnamon + fruit","No added sugar packets.","Flocons d'avoine aromatisés","Flocons nature + cannelle + fruit","Pas de sachets de sucre ajouté."],
+["Fruit-flavored snacks","Fresh or frozen fruit","Real fruit, no added sugar.","Compotes et snacks aux fruits","Fruits frais ou surgelés","De vrais fruits, sans sucre ajouté."],
+["Sweetened plant milk","Unsweetened plant milk","Saves 2 to 3 teaspoons of sugar per glass.","Boisson végétale sucrée","Boisson végétale non sucrée","Économise 2 à 3 cuillères à café de sucre par verre."],
+["Protein bar","Greek yogurt + nuts","Often cheaper, with fewer additives.","Barre protéinée","Yaourt grec + noix","Souvent moins cher, avec moins d'additifs."],
+["Diet soda every day","Water with a slice of fruit","Easier to keep a taste for plain drinks.","Soda light tous les jours","Eau + tranche de fruit","Plus facile de s'habituer aux boissons nature."],
+["Granola","Plain oats + nuts + fruit","Granola is often high in sugar and oil.","Granola","Flocons nature + noix + fruit","Le granola est souvent riche en sucre et en huile."],
+["Store-bought smoothie","Blend fruit + plain yogurt at home","Less sugar and more protein.","Smoothie du commerce","Fruits + yaourt nature mixés maison","Moins de sucre et plus de protéines."],
+["Crackers","Whole-grain crackers or veggies + hummus","More fiber and fewer refined carbs.","Crackers","Crackers complets ou légumes + houmous","Plus de fibres et moins de glucides raffinés."],
+["Cream cheese spread","Hummus","Less saturated fat, plus fiber.","Fromage à tartiner","Houmous","Moins de graisses saturées, plus de fibres."],
+["Chocolate spread","Peanut butter, just peanuts","Protein instead of sugar.","Pâte à tartiner","Beurre de cacahuète, juste des cacahuètes","Des protéines à la place du sucre."],
+["Canned soup","Homemade soup or low-sodium soup","Canned soup can hold half your daily sodium.","Soupe en boîte","Soupe maison ou soupe pauvre en sel","La soupe en boîte peut contenir la moitié du sodium du jour."],
+["White pasta","Whole-wheat or lentil pasta","More fiber and protein.","Pâtes blanches","Pâtes complètes ou de lentilles","Plus de fibres et de protéines."]
+];
+function founder(k){k.innerHTML=`<p class="d" style="font-size:22px">You're in ✓</p><p style="font-size:15px;margin:4px 0 10px">Scrollwise Premium: all 3 topics, unlimited cards and your weekly profile.</p><p class="d" style="font-size:24px;margin-bottom:10px">Founder price <span style="font-size:28px">$19.99/year</span> <s style="opacity:.55;font-size:18px">$39.99</s></p><button class="btn" id="fd">Get the founder price</button><p class="small" style="margin-top:6px">No payment today.</p>`;
+  k.querySelector("#fd").onclick=()=>{if(!S.fd){S.fd=1;save();ev("offer_click",{price:LANG==="fr"?20:19.99,currency:LANG==="fr"?"EUR":"USD",d:dom,lang:LANG})}k.innerHTML=`<p class="d" style="font-size:22px">Coming soon 🎉</p><p style="font-size:15px">You're on the list for the $19.99 founder price. We'll email you at launch. Nothing was charged.</p>`}}
+const FT=()=>{const st=S.food||(S.food={});return st.tools||(st.tools={ld:0})};
+function ftools(from){ev("tool_open",{tool:"menu",from});
+ $.innerHTML=`<div class="scr"><span class="tag">${L("Food tools","Outils alimentation")}</span><h1 class="big" style="font-size:34px">${L("Check before you eat.","Vérifie avant de manger.")}</h1>
+ <button class="btn ghost mt" data-t="ld"><b>${L("Label decoder","Décodeur d'étiquette")}</b><br><span style="font-weight:500;font-size:14px">${L("Type 5 numbers, get a clear verdict. 3 free checks.","Tape 5 chiffres, obtiens un verdict clair. 3 essais gratuits.")}</span></button>
+ <button class="btn ghost mt" data-t="sw"><b>${L("Swap finder","Trouveur d'alternatives")}</b><br><span style="font-weight:500;font-size:14px">${L("A better swap for 38 everyday foods.","Une meilleure alternative pour 38 aliments courants.")}</span></button>
+ <button class="btn ghost mt" data-t="tg"><b>${L("Daily targets","Objectifs du jour")}</b><br><span style="font-weight:500;font-size:14px">${L("Protein, fiber and sugar for your weight.","Protéines, fibres et sucre selon ton poids.")}</span></button>
+ <div class="sp"></div><button class="btn mt" id="bk">${L("Back","Retour")}</button></div>`;
+ $.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>({ld:tLabel,sw:tSwap,tg:tTarget})[b.dataset.t]());
+ el("#bk").onclick=()=>from==="plan"?plan():location.reload()}
+function tHead(title,sub){return `<span class="tag">${L("Food tools","Outils alimentation")}</span><h1 class="big" style="font-size:30px">${title}</h1><p class="lead" style="font-size:15px">${sub}</p>`}
+function tLabel(){const T=FT();ev("tool_open",{tool:"label"});
+ if(T.ld>=3){ev("tool_locked",{tool:"label"});$.innerHTML=`<div class="scr">${tHead(L("Label decoder","Décodeur d'étiquette"),L("You used your 3 free checks.","Tu as utilisé tes 3 essais gratuits."))}<div id="kp" class="take" style="margin-top:12px"></div><div class="sp"></div><button class="btn mt" id="bk">${L("Back","Retour")}</button></div>`;
+  const kp=el("#kp");if(S.email)founder(kp);else{kp.innerHTML=`<p style="font-size:15px;margin-bottom:10px">${L("Premium: unlimited label checks, all 3 topics. Leave your email to get the founder price.","Premium : décodeur illimité, les 3 thèmes. Laisse ton e-mail pour obtenir le prix fondateur.")}</p><input id="em" type="email" placeholder="you@email.com" autocomplete="email" aria-label="Email"><button class="btn" id="kb">${L("Get the founder price","Obtenir le prix fondateur")}</button>`;
+   el("#kb").onclick=()=>{const e=el("#em").value.trim();if(!/^\S+@\S+\.\S+$/.test(e)){el("#em").focus();return}S.email=e;save();send("waitlist",{email:e,tool:"label"});founder(kp)}}
+  el("#bk").onclick=()=>ftools();return}
+ const F=[["sug",L("Added sugars (g)","Sucres ajoutés (g)")],["sod",L("Sodium (mg)","Sodium (mg)")],["sat",L("Saturated fat (g)","Graisses saturées (g)")],["fib",L("Fiber (g)","Fibres (g)")],["pro",L("Protein (g)","Protéines (g)")]];
+ $.innerHTML=`<div class="scr">${tHead(L("Label decoder","Décodeur d'étiquette"),L("Numbers per serving, from the nutrition label. ","Chiffres par portion, d'après l'étiquette. ")+(3-T.ld)+L(" free checks left."," essais gratuits restants."))}
+ ${F.map(f=>`<input data-f="${f[0]}" type="number" inputmode="decimal" min="0" placeholder="${f[1]}" aria-label="${f[1]}">`).join("")}
+ <div id="out"></div><div class="sp"></div><button class="btn" id="go">${L("Decode","Décoder")}</button><button class="btn ghost mt" id="bk">${L("Back","Retour")}</button></div>`;
+ el("#bk").onclick=()=>ftools();
+ el("#go").onclick=()=>{const v={};let any=0;$.querySelectorAll("[data-f]").forEach(i=>{v[i.dataset.f]=i.value===""?null:+i.value;if(i.value!=="")any=1});if(!any){$.querySelector("[data-f]").focus();return}
+  const rows=[];let bad=0,good=0;
+  // sugar: <=5 g low, >=10 g high; sodium: <=120 mg low, >=480 mg high; sat fat: <=1 g low, >=4 g high (per serving, 5% / 20% of daily value)
+  const chk=(k,lo,hi,label,tLow,tMid,tHigh)=>{const x=v[k];if(x===null)return;const l=x<=lo?0:x>=hi?2:1;if(l===2)bad++;if(l===0)good++;rows.push([l,label,x,[tLow,tMid,tHigh][l]])};
+  chk("sug",5,10,L("Added sugars","Sucres ajoutés"),L("Low. Easy to fit in.","Faible. Facile à intégrer."),L("Moderate. Count it in your day.","Modéré. Compte-le dans ta journée."),L("High. Around 10 g is already 2 teaspoons.","Élevé. 10 g, c'est déjà 2 cuillères à café."));
+  chk("sod",120,480,L("Sodium","Sodium"),L("Low.","Faible."),L("Moderate. Watch the rest of your day.","Modéré. Surveille le reste de ta journée."),L("High. That's about a fifth of a day's limit.","Élevé. Environ un cinquième de la limite du jour."));
+  chk("sat",1,4,L("Saturated fat","Graisses saturées"),L("Low.","Faible."),L("Moderate.","Modéré."),L("High. Keep it occasional.","Élevé. À garder occasionnel."));
+  const fb=v.fib,pr=v.pro;
+  if(fb!==null){const l=fb>=5?0:fb>=2?1:2;if(l===0)good++;rows.push([l===2?1:l===0?0:1,L("Fiber","Fibres"),fb,fb>=5?L("Great. 5 g or more is a high-fiber food.","Super. 5 g ou plus, c'est un aliment riche en fibres."):fb>=2?L("Some fiber. Better with more.","Un peu de fibres. Mieux avec plus."):L("Almost none.","Presque aucune.")])}
+  if(pr!==null){const l=pr>=10?0:pr>=5?1:2;if(l===0)good++;rows.push([l===2?1:l===0?0:1,L("Protein","Protéines"),pr,pr>=10?L("Solid protein source.","Bonne source de protéines."):pr>=5?L("Some protein.","Un peu de protéines."):L("Little protein.","Peu de protéines.")])}
+  const verdict=bad>=2?[L("Occasional treat 🍰","À garder pour l'occasion 🍰"),L("Several numbers are high. Fine now and then, not every day.","Plusieurs chiffres sont élevés. Bien de temps en temps, pas tous les jours.")]:bad===1?[L("OK, with a catch 🟡","Correct, avec une réserve 🟡"),L("Mostly fine, but one number is high. Balance it with the rest of your meal.","Plutôt correct, mais un chiffre est élevé. Équilibre avec le reste du repas.")]:[L("Good pick ✅","Bon choix ✅"),L("Nothing here stands out as high. A solid everyday option.","Rien ne ressort comme élevé. Une option solide au quotidien.")];
+  const col=["#0f9d58","#c58a00","#e0244d"];
+  el("#out").innerHTML=`<div class="take" style="margin-top:12px"><b style="font-size:20px">${verdict[0]}</b><br>${verdict[1]}</div>`+rows.map(r=>`<div class="take" style="margin-top:8px;border-left:6px solid ${col[r[0]]}"><b>${r[1]} · ${r[2]}</b><br><span style="font-weight:500">${r[3]}</span></div>`).join("")+`<p class="small">${L("Based on 5% (low) and 20% (high) of daily values. A guide, not medical advice.","Basé sur 5 % (faible) et 20 % (élevé) des apports de référence. Un repère, pas un avis médical.")}</p>`;
+  T.ld++;save();ev("tool_use",{tool:"label",verdict:bad>=2?"treat":bad===1?"ok":"good"});
+  el("#go").textContent=L("Decode another","Décoder un autre");el("#go").onclick=tLabel;el("#out").scrollIntoView({behavior:"smooth"})}}
+function tSwap(){ev("tool_open",{tool:"swap"});
+ $.innerHTML=`<div class="scr">${tHead(L("Swap finder","Trouveur d'alternatives"),L("Type a food, or tap one.","Tape un aliment, ou touches-en un."))}
+ <input id="q" type="search" placeholder="${L("Search a food","Cherche un aliment")}" aria-label="${L("Search a food","Cherche un aliment")}"><div id="ls"></div><button class="btn ghost mt" id="bk">${L("Back","Retour")}</button></div>`;
+ const i0=LANG==="fr"?3:0,ls=el("#ls");let used=0;
+ const draw=q=>{const m=SWAPS.filter(s=>s[i0].toLowerCase().includes(q.toLowerCase()));ls.innerHTML=m.length?m.map((s,i)=>`<button class="take" data-i="${SWAPS.indexOf(s)}" style="display:block;width:100%;text-align:left;margin-top:8px"><b>${s[i0]}</b></button>`).join(""):`<p class="small">${L("No match. Try another word.","Aucun résultat. Essaie un autre mot.")}</p>`;
+  ls.querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>{const s=SWAPS[+b.dataset.i];if(!used++)ev("tool_use",{tool:"swap",item:s[0]});b.innerHTML=`<b>${s[i0]}</b><br>→ <b>${s[i0+1]}</b><br><span style="font-weight:500;font-size:14px">${s[i0+2]}</span>`})};
+ el("#q").oninput=e=>draw(e.target.value);draw("");el("#bk").onclick=()=>ftools()}
+function tTarget(){ev("tool_open",{tool:"targets"});const us=UNITS==="us",G=[L("Eat healthier","Manger plus sain"),L("Lose weight","Perdre du poids"),L("Build muscle","Prendre du muscle")];
+ $.innerHTML=`<div class="scr">${tHead(L("Daily targets","Objectifs du jour"),L("Rough guides for an average adult.","Repères pour un adulte moyen."))}
+ <input id="w" type="number" inputmode="decimal" min="0" placeholder="${L("Weight","Poids")} (${us?"lb":"kg"})" aria-label="${L("Weight","Poids")}">
+ <div class="row" style="flex-wrap:wrap">${G.map((g,i)=>`<button class="btn ghost" data-g="${i}" style="padding:12px;font-size:15px;min-width:30%">${g}</button>`).join("")}</div>
+ <div id="out"></div><div class="sp"></div><button class="btn ghost mt" id="bk">${L("Back","Retour")}</button></div>`;
+ el("#bk").onclick=()=>ftools();
+ $.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{const w=+el("#w").value;if(!(w>0)){el("#w").focus();return}
+  const kg=us?w/2.2046:w,g=+b.dataset.g,pr=Math.round(kg*[0.8,1.2,1.6][g]/5)*5;
+  const rows=[[L("Protein","Protéines"),pr+" g",L("per day, spread over your meals","par jour, répartis sur tes repas")],[L("Fiber","Fibres"),"28 g",L("per day, minimum","par jour, minimum")],[L("Added sugar","Sucre ajouté"),L("under 25 g","moins de 25 g"),L("per day (50 g is the upper limit)","par jour (50 g est la limite haute)")],[L("Sodium","Sodium"),L("under 2,300 mg","moins de 2 300 mg"),L("per day","par jour")]];
+  $.querySelectorAll("[data-g]").forEach(x=>x.style.opacity=x===b?1:.5);
+  el("#out").innerHTML=rows.map(r=>`<div class="take" style="margin-top:8px"><b>${r[0]} · ${r[1]}</b><br><span style="font-weight:500;font-size:14px">${r[2]}</span></div>`).join("")+`<p class="small">${L("General guides, not medical advice. Ask a professional if you have a health condition.","Repères généraux, pas un avis médical. Demande à un professionnel en cas de problème de santé.")}</p>`;
+  ev("tool_use",{tool:"targets",goal:g});el("#out").scrollIntoView({behavior:"smooth"})})}
 
 function paywall(){const d=D[dom];
  $.innerHTML=`<div class="scr"><span class="tag">${NAME} Premium</span><h1 class="big">One plan.<br>Every topic.</h1>
@@ -381,14 +480,12 @@ function daily(){const st0=S[dom]||(S[dom]={});if(!st0.start){st0.start=day();sa
   s.innerHTML=`<span class="tag">Today's score · ${d.name}</span><div class="sp"></div><div class="d" style="font-size:110px;line-height:1">${score}/${d.cards.length}</div><p class="d" style="font-size:26px">🔥 ${st.streak}-day streak</p><p class="lead mt">5 new cards tomorrow.</p>${dom==="food"?fprogHtml():""}<div class="sp"></div>
   <div id="keep"><p class="d" style="font-size:22px;margin-bottom:8px">Keep your streak alive</p><p style="font-size:15px;margin-bottom:10px">Get tomorrow's cards by email. Free, unsubscribe anytime.</p>
   <input id="em" type="email" placeholder="you@email.com" autocomplete="email" aria-label="Email"><button class="btn" id="kp">Send me tomorrow's cards</button></div>
-  <button class="btn ghost mt" id="sh">Share my score</button><p class="small" style="margin:14px 0 8px">Try another topic</p><div class="row">${others.map(k=>`<button class="btn ghost" data-k="${k}">${D[k].name}</button>`).join("")}</div>`;
+  ${dom==="food"?'<button class="btn ghost mt" id="tl">Food tools</button>':""}<button class="btn ghost mt" id="sh">Share my score</button><p class="small" style="margin:14px 0 8px">Try another topic</p><div class="row">${others.map(k=>`<button class="btn ghost" data-k="${k}">${D[k].name}</button>`).join("")}</div>`;
   f.appendChild(s);s.scrollIntoView({behavior:"smooth"});
   s.querySelector("#sh").onclick=()=>{ev("share",{kind:"score",score,d:dom});share(LANG==="fr"?FR.share.score(score,d.cards.length,d.name,st.streak,NAME):`${score}/${d.cards.length} on today's ${d.name} cards, ${st.streak}-day streak 🔥 ${NAME}`)};
-  s.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>go(b.dataset.k));
+  s.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>go(b.dataset.k));const tl=s.querySelector("#tl");if(tl)tl.onclick=()=>ftools("end");
   const keep=s.querySelector("#keep");if(S.email)founder(keep);
   s.querySelector("#kp").onclick=()=>{const e=s.querySelector("#em").value.trim();if(!/^\S+@\S+\.\S+$/.test(e)){s.querySelector("#em").focus();return}S.email=e;save();send("waitlist",{email:e,score});founder(keep)}}
- function founder(k){k.innerHTML=`<p class="d" style="font-size:22px">You're in ✓</p><p style="font-size:15px;margin:4px 0 10px">Scrollwise Premium: all 3 topics, unlimited cards and your weekly profile.</p><p class="d" style="font-size:24px;margin-bottom:10px">Founder price <span style="font-size:28px">$19.99/year</span> <s style="opacity:.55;font-size:18px">$39.99</s></p><button class="btn" id="fd">Get the founder price</button><p class="small" style="margin-top:6px">No payment today.</p>`;
-  k.querySelector("#fd").onclick=()=>{if(!S.fd){S.fd=1;save();ev("offer_click",{price:LANG==="fr"?20:19.99,currency:LANG==="fr"?"EUR":"USD",d:dom,lang:LANG})}k.innerHTML=`<p class="d" style="font-size:22px">Coming soon 🎉</p><p style="font-size:15px">You're on the list for the $19.99 founder price. We'll email you at launch. Nothing was charged.</p>`}}
  ask()}
 
 /* ================= INSTALL (PWA) ================= */

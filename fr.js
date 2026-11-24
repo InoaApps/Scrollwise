@@ -28,7 +28,7 @@ FR.ui={
 "Pick one packaged food and count its ingredients.":"Choisis un produit emballé et compte ses ingrédients.",
 "Compare the calories of a 'low-fat' product and its regular version.":"Compare les calories d'un produit « allégé » et de sa version ordinaire.",
 "Add up the sodium of today's packaged foods.":"Additionne le sodium des aliments emballés d'aujourd'hui.",
-"True or false?":"Vrai ou faux ?","Review · True or false?":"Révision · Vrai ou faux ?","True":"Vrai","False":"Faux","Yes!":"Oui !","Nope.":"Non.",
+"True or false?":"Vrai ou faux ?","True":"Vrai","False":"Faux","Yes!":"Oui !","Nope.":"Non.",
 "Why? Scroll ↑":"Pourquoi ? Fais défiler ↑",
 "The explanation":"L'explication","Remember":"À retenir","Try this":"À essayer","Source:":"Source :",
 "Strong consensus":"Consensus fort","Good evidence":"Bonnes preuves","Still debated":"Encore débattu",
@@ -49,6 +49,7 @@ FR.ui={
 "Get the app":"Installer l'app","Install":"Installer",
 "Install the Scrollwise app":"Installer l'app Scrollwise",
 "Link copied":"Lien copié",
+"Food tools":"Outils alimentation",
 "Email":"E-mail"
 };
 FR.rx=[
@@ -61,7 +62,6 @@ FR.rx=[
 [/^🔥 (\d+)-day streak$/,(m,n)=>"🔥 "+n+(+n>1?" jours":" jour")+" de suite"],
 [/^Your week plan · (.+)$/,"Ton plan de la semaine · $1"],
 [/^Day (\d+) · (.+)$/,"Jour $1 · $2"],
-[/^Module (\d+) of 8 · (.+)$/,"Module $1 sur 8 · $2"],[/^(\d+)\/10 cards seen · (\d+) mastered$/,(m,a,b)=>a+"/10 cartes vues · "+b+(+b>1?" maîtrisées":" maîtrisée")],[/^Module (\d+) complete! 🏁$/,"Module $1 terminé ! 🏁"],
 [/^Built for you: goal "(.+)", biggest obstacle "(.+)"\.$/,(m,a,b)=>"Fait pour toi : objectif « "+(FR.ui[a]||a)+" », principal obstacle « "+(FR.ui[b]||b)+" »."]
 ];
 FR.dom={
