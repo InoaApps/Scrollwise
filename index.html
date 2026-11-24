@@ -247,7 +247,7 @@ function intro(){const d=D[dom];const st=S[dom]||{};
  if(st.profile!==undefined)return daily();
  $.innerHTML=`<div class="scr"><span class="tag">${NAME} · ${d.name}</span><div class="sp"></div><h1 class="big">${d.title}</h1><p class="lead">${d.sub}</p><div class="sp"></div>
  <button class="btn" id="go">Find my ${d.name.toLowerCase()} profile</button><div class="small">6 quick swipes · free</div></div>`;
- el("#go").onclick=()=>swipe(0,[0,0,0])}
+ el("#go").onclick=()=>dom==="food"?fquiz(0,[]):swipe(0,[0,0,0])}
 
 function swipe(i,t){const d=D[dom];if(i>=d.swipes.length)return result(t);
  $.innerHTML=`<div class="scr"><div class="top"><span>Your ${d.name.toLowerCase()} profile</span><span>${i+1}/${d.swipes.length}</span></div>
@@ -264,8 +264,34 @@ function swipe(i,t){const d=D[dom];if(i>=d.swipes.length)return result(t);
 function result(t){const d=D[dom];const k=t.indexOf(Math.max(...t));const p=d.profiles[k];S[dom]=Object.assign(S[dom]||{},{profile:k});save();
  $.innerHTML=`<div class="scr"><span class="tag">Your ${d.name.toLowerCase()} profile</span>
  <div class="pcard"><div class="e">${p[0]}</div><div class="d">${p[1]}</div><p>${p[2]}</p><div class="small" style="opacity:.7">${NAME}</div></div>
- <div class="sp"></div><button class="btn" id="nx">Start today's 3-minute session</button><button class="btn ghost mt" id="sh">Share my profile</button></div>`;
- el("#nx").onclick=daily;el("#sh").onclick=()=>{ev("share",{kind:"profile",d:dom,profile:k});share(`I'm ${p[1]} ${p[0]} on ${NAME}. What's your ${d.name.toLowerCase()} profile?`)}}
+ <div class="sp"></div><button class="btn" id="nx">${dom==="food"&&S.food&&S.food.plan?"See my week plan":"Start today's 3-minute session"}</button><button class="btn ghost mt" id="sh">Share my profile</button></div>`;
+ el("#nx").onclick=dom==="food"&&S.food.plan?plan:daily;el("#sh").onclick=()=>{ev("share",{kind:"profile",d:dom,profile:k});share(`I'm ${p[1]} ${p[0]} on ${NAME}. What's your ${d.name.toLowerCase()} profile?`)}}
+
+// ---- Food expert: 5-question profile and weekly plan ----
+const FQ=[["What's your main goal?",["Eat healthier","Lose weight","Have more energy","Shop smarter"]],
+ ["What gets in the way most?",["Snacking","Sugar cravings","No time","Eating out","Budget"]],
+ ["Meals cooked at home per week?",["0 to 3","4 to 8","9 or more"]],
+ ["Any food rules?",["None","Vegetarian","Dairy-free","Gluten-free"]],
+ ["Your food knowledge?",["Beginner","I know the basics","Advanced"]]];
+const FMODS={"Snacking":[1,3],"Sugar cravings":[3,2],"No time":[6,8],"Eating out":[8,7],"Budget":[4,7],"Eat healthier":[1,5],"Lose weight":[1,8],"Have more energy":[3,4],"Shop smarter":[2,7]};
+const PLANX={1:"Measure your usual cooking oil with a spoon, just once.",2:"Find the added sugar grams in your usual breakfast.",3:"Find the grams of sugar in your usual drink.",4:"Add an egg or beans to a meal that's low in protein.",5:"Swap butter for olive oil at one meal.",6:"Pick one packaged food and count its ingredients.",7:"Compare the calories of a 'low-fat' product and its regular version.",8:"Add up the sodium of today's packaged foods."};
+function fquiz(i,a){
+ if(i>=FQ.length){const st=S.food=S.food||{};st.prof=a;
+  const mods=[...new Set([...FMODS[a[1]],...FMODS[a[0]],2,1,8,4,3])].slice(0,5);
+  st.plan={mods,done:[],week:day()};save();ev("profile_done",{d:"food",goal:a[0],snag:a[1],level:a[4]});
+  const k=a[1]==="Snacking"?2:a[1]==="Sugar cravings"?1:0,t=[0,0,0];t[k]=1;return result(t)}
+ const q=FQ[i];$.innerHTML=`<div class="scr"><div class="top"><span>Your food profile</span><span>${i+1}/${FQ.length}</span></div>
+ <div class="prog">${FQ.map((_,k)=>`<i class="${k<i?"on":""}"></i>`).join("")}</div><div class="sp"></div><h1 class="big" style="font-size:34px">${q[0]}</h1><div class="sp"></div>
+ ${q[1].map((o,k)=>`<button class="btn ghost mt" data-o="${k}">${o}</button>`).join("")}</div>`;
+ $.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{vib();a[i]=q[1][b.dataset.o];fquiz(i+1,a)})}
+function plan(){const st=S.food,p=st.plan;
+ const days=p.mods.map(m=>FOOD_MODULES[m-1]);
+ $.innerHTML=`<div class="scr"><span class="tag">Your week plan · Food</span><h1 class="big" style="font-size:36px">One small action a day.</h1>
+ <p class="lead">Built for you: goal "${st.prof[0]}", biggest obstacle "${st.prof[1]}".</p>
+ <div id="pl">${days.map((m,d)=>`<label class="take" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin-top:10px"><input type="checkbox" data-d="${d}" ${p.done.includes(d)?"checked":""} style="width:24px;height:24px;flex:none;margin-top:2px"><span style="flex:1"><b>Day ${d+1} · ${m.name}</b>${PLANX[m.id]}</span></label>`).join("")}</div>
+ <div class="sp"></div><button class="btn" id="nx">Start today's 3-minute session</button></div>`;
+ $.querySelectorAll("[data-d]").forEach(c=>c.onchange=()=>{const d=+c.dataset.d;p.done=p.done.filter(x=>x!==d);if(c.checked){p.done.push(d);ev("plan_action",{d:"food",day:d+1})}save()});
+ el("#nx").onclick=daily}
 
 function paywall(){const d=D[dom];
  $.innerHTML=`<div class="scr"><span class="tag">${NAME} Premium</span><h1 class="big">One plan.<br>Every topic.</h1>
