@@ -1,5 +1,5 @@
 // Scrollwise service worker: offline copy of the app shell, network first so updates show up fast.
-const CACHE = "scrollwise-v3";
+const CACHE = "scrollwise-v4";
 const SHELL = ["./", "./index.html", "./food.js", "./fr.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))); self.clients.claim(); });

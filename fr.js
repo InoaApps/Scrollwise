@@ -49,6 +49,7 @@ FR.ui={
 "Get the app":"Installer l'app","Install":"Installer",
 "Install the Scrollwise app":"Installer l'app Scrollwise",
 "Link copied":"Lien copié",
+"Food tools":"Outils alimentation",
 "Email":"E-mail"
 };
 FR.rx=[
