@@ -289,7 +289,7 @@ function daily(){const st0=S[dom]||(S[dom]={});if(!st0.start){st0.start=day();sa
    const w=document.createElement("section");w.className="scr dark why";
    w.innerHTML=`<div class="top"><span>Why it's ${c.a?"true":"false"}</span><span>${i+1}/${d.cards.length}</span></div>${prog(i+1)}<h2>The explanation</h2>${c.w.map(p=>`<p class="mt">${p}</p>`).join("")}<div class="take mt"><b>Remember</b>${c.t}</div><div class="hint">${i+1<d.cards.length?"Next card":"Your score"} ↑</div>`;
    f.appendChild(w);i++;i<d.cards.length?ask(1):end()}}
- function end(){const st=S[dom];if(st.last!==day()){st.streak=st.last===day(1)?(st.streak||0)+1:1;st.last=day();save();send("plays",{score,details:{d:dom,profile:st.profile,streak:st.streak}})}
+ function end(){const st=S[dom];if(!S.done){S.done=1;save()}installBar();if(st.last!==day()){st.streak=st.last===day(1)?(st.streak||0)+1:1;st.last=day();save();send("plays",{score,details:{d:dom,profile:st.profile,streak:st.streak}})}
   const others=Object.keys(D).filter(k=>k!==dom);const s=document.createElement("section");s.className="scr";
   s.innerHTML=`<span class="tag">Today's score · ${d.name}</span><div class="sp"></div><div class="d" style="font-size:110px;line-height:1">${score}/${d.cards.length}</div><p class="d" style="font-size:26px">🔥 ${st.streak}-day streak</p><p class="lead mt">5 new cards tomorrow.</p><div class="sp"></div>
   <div id="keep"><p class="d" style="font-size:22px;margin-bottom:8px">Keep your streak alive</p><p style="font-size:15px;margin-bottom:10px">Get tomorrow's cards by email. Free, unsubscribe anytime.</p>
@@ -312,14 +312,15 @@ const inApp=/Instagram|FBAN|FBAV|TikTok|musical_ly|Snapchat|Twitter/i.test(navig
 function installBar(){
  if(standalone()||document.getElementById("inst"))return;
  if(!deferred&&!isIOS)return; // this browser can't install: show nothing
+ if(!(S.done||["money","food","mind"].some(k=>S[k]&&S[k].last)))return; // only after a first finished session
  const b=document.createElement("button");b.id="inst";b.setAttribute("aria-label","Install the Scrollwise app");
  b.innerHTML=`<img src="icons/icon-192.png" alt="">Get the app<span class="go">Install</span>`;
  document.body.appendChild(b);document.body.classList.add("inst");
  b.onclick=async()=>{
   if(deferred){deferred.prompt();const r=await deferred.userChoice;deferred=null;if(r.outcome==="accepted"){removeInst();ev("install",{d:dom})}return}
   const m=document.createElement("div");m.id="ios";
-  m.innerHTML=`<div><h2 class="d" style="font-size:26px">Add Scrollwise to your home screen</h2>${inApp?`<p style="margin-top:10px;font-weight:600">First, open this page in Safari: tap the <b>•••</b> menu, then <b>Open in browser</b>.</p>`:""}<ol><li>Tap the <b>Share</b> button <span aria-hidden="true">⬆️</span> at the bottom of Safari</li><li>Scroll down and tap <b>Add to Home Screen</b></li><li>Tap <b>Add</b></li></ol><button class="btn" style="background:#1a1300;color:#ffd84d">Got it</button></div>`;
-  document.body.appendChild(m);m.onclick=e=>{if(e.target===m||e.target.tagName==="BUTTON")m.remove()}}}
+  m.innerHTML=`<div><h2 class="d" style="font-size:26px">Add Scrollwise to your home screen</h2>${inApp?`<p style="margin-top:10px;font-weight:600">First, open this page in Safari: tap the <b>•••</b> menu, then <b>Open in browser</b>.</p>`:""}<ol><li>Tap the <b>Share</b> button <span aria-hidden="true">⬆️</span> at the bottom of Safari</li><li>Scroll down and tap <b>Add to Home Screen</b></li><li>Tap <b>Add</b></li></ol>${navigator.share&&!inApp?`<button class="btn" id="osh" style="background:#ffd84d;color:#1a1300;margin-bottom:10px">Open share menu</button>`:""}<button class="btn" id="gotit" style="background:#1a1300;color:#ffd84d">Got it</button></div>`;
+  document.body.appendChild(m);const o=m.querySelector("#osh");if(o)o.onclick=()=>navigator.share({title:NAME,url:location.href}).catch(()=>{});m.onclick=e=>{if(e.target===m||e.target.id==="gotit")m.remove()}}}
 function removeInst(){const b=document.getElementById("inst");if(b)b.remove();document.body.classList.remove("inst")}
 addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;installBar()});
 addEventListener("appinstalled",removeInst);
