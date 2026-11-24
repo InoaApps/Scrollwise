@@ -239,7 +239,7 @@ mind:{name:"Mind",title:"Understand your own mind.",sub:"5 true-or-false cards a
 
 /* ================= STATE ================= */
 const P=new URLSearchParams(location.search);let dom=P.get("d");if(!D[dom])dom=null;
-D.food.cards=FOOD_MODULES.flatMap(m=>m.cards); // expert Food program (food.js)
+D.food.cards=FOOD_MODULES.flatMap(m=>m.cards.map((c,i)=>(c.k=m.id+"."+i,c.m=m.id,c))); // expert Food program (food.js)
 /* ---- language and units ---- */
 const T=s=>LANG==="fr"&&window.FR&&FR.ui[s]||s;
 // [US English, metric English, metric French, US French]
@@ -271,6 +271,7 @@ let S={};try{S=JSON.parse(localStorage.getItem("ds2")||"{}")}catch{}
 const save=()=>{try{localStorage.setItem("ds2",JSON.stringify(S))}catch{}};
 const $=document.getElementById("app");const el=s=>$.querySelector(s);
 const vib=()=>{try{navigator.vibrate&&navigator.vibrate(15)}catch{}};
+const dayp=n=>new Date(Date.now()+n*864e5).toISOString().slice(0,10);
 const day=(o=0)=>new Date(Date.now()-o*864e5).toISOString().slice(0,10);
 const share=async t=>{try{if(navigator.share)await navigator.share({text:t,url:location.href});else{await navigator.clipboard.writeText(t+" "+location.href);alert(T("Link copied"))}}catch{}};
 const go=d=>{location.search="?d="+d};
@@ -340,16 +341,34 @@ function paywall(){const d=D[dom];
  el("#tr").onclick=()=>{const e=el("#em").value.trim();if(!/^\S+@\S+\.\S+$/.test(e)){el("#em").focus();return}S.email=e;save();send("waitlist",{email:e});daily()};
  el("#sk").onclick=()=>{S[dom].skip=1;save();daily()}}
 
+// ---- Food program: modules, progression and spaced review ----
+function fmods(){const pg=S.food.pg;return FOOD_MODULES.map(m=>{let seen=0,mas=0;m.cards.forEach(c=>{const r=pg.s[c.k];if(r){seen++;if(r.st>=2)mas++}});return{seen,mas}})}
+function fpick(){const st=S.food||(S.food={});const pg=st.pg||(st.pg={s:{},today:null});const t=day(),all=D.food.cards;
+ if(pg.today&&pg.today.d===t)return pg.today.keys.map(k=>{const c=all.find(x=>x.k===k);c.rev=pg.today.revs.includes(k)?1:0;return c});
+ all.forEach(c=>c.rev=0);
+ const due=all.filter(c=>{const r=pg.s[c.k];return r&&r.st<2&&r.due<=t}).slice(0,2);due.forEach(c=>c.rev=1);
+ const pick=[...due];
+ for(const c of all){if(pick.length>=5)break;if(!pg.s[c.k])pick.push(c)}
+ for(const c of all){if(pick.length>=5)break;if(!pick.includes(c)&&pg.s[c.k]&&pg.s[c.k].st<2)pick.push(c)}
+ for(const c of all){if(pick.length>=5)break;if(!pick.includes(c))pick.push(c)}
+ pg.today={d:t,keys:pick.map(c=>c.k),revs:due.map(c=>c.k),rec:{},before:fmods()};save();return pick}
+function frec(c,ok){const pg=S.food.pg,tr=pg.today;if(!tr||tr.rec[c.k])return;tr.rec[c.k]=1;const r=pg.s[c.k];
+ if(!r)pg.s[c.k]=ok?{st:2}:{st:0,due:dayp(1)};else if(ok){r.st++;r.due=dayp(r.st===1?3:7)}else{r.st=0;r.due=dayp(1)}save()}
+function fprogHtml(){const pg=S.food.pg,ms=fmods(),bef=pg.today.before;let cur=ms.findIndex(x=>x.seen<10);if(cur<0)cur=7;
+ const fin=ms.findIndex((x,i)=>x.seen>=10&&bef[i].seen<10);
+ if(fin>=0&&!pg.today.md){pg.today.md=1;save();ev("module_done",{d:"food",m:fin+1})}
+ const m=FOOD_MODULES[fin>=0?fin:cur],x=ms[fin>=0?fin:cur];
+ return `<div class="take" style="margin-top:14px">${fin>=0?`<b>Module ${fin+1} complete! 🏁</b>`:""}<b>Module ${(fin>=0?fin:cur)+1} of 8 · ${m.name}</b><div style="height:8px;border-radius:99px;background:rgba(0,0,0,.15);margin:8px 0"><div style="height:8px;border-radius:99px;background:var(--ink);width:${x.seen*10}%"></div></div><span style="font-weight:500">${x.seen}/10 cards seen · ${x.mas} mastered</span></div>`}
 function mix(c){const t=c.filter(x=>x.a),f=c.filter(x=>!x.a),r=[];let a=0,b=0;while(r.length<c.length){if(a<t.length&&(b>=f.length||a/t.length<=b/f.length))r.push(t[a++]);else r.push(f[b++])}return r}
 function daily(){const st0=S[dom]||(S[dom]={});if(!st0.start){st0.start=day();save()}
  const all=mix(D[dom].cards),sets=Math.floor(all.length/5),k=Math.round((Date.parse(day())-Date.parse(st0.start))/864e5)%sets;
- const d={...D[dom],cards:all.slice(k*5,k*5+5)};let i=0,score=0;
+ const d={...D[dom],cards:dom==="food"?fpick():all.slice(k*5,k*5+5)};let i=0,score=0;
  $.innerHTML=`<div class="feed" id="f"></div>`;const f=el("#f");
  const prog=n=>`<div class="prog">${d.cards.map((_,k)=>`<i class="${k<n?"on":""}"></i>`).join("")}</div>`;
  function ask(quiet){const c=d.cards[i];const s=document.createElement("section");s.className="scr"+(i%2?" alt":"");
-  s.innerHTML=`<div class="top"><span>${d.name} · today</span><span>${i+1}/${d.cards.length}</span></div>${prog(i)}<div class="tag" style="margin-top:22px">True or false?</div><div class="d q">${c.q}</div><div class="row"><button class="btn" data-a="1">True</button><button class="btn ghost" data-a="0">False</button></div>`;
+  s.innerHTML=`<div class="top"><span>${d.name} · today</span><span>${i+1}/${d.cards.length}</span></div>${prog(i)}<div class="tag" style="margin-top:22px">${c.rev?"Review · True or false?":"True or false?"}</div><div class="d q">${c.q}</div><div class="row"><button class="btn" data-a="1">True</button><button class="btn ghost" data-a="0">False</button></div>`;
   f.appendChild(s);if(!quiet)s.scrollIntoView({behavior:"smooth"});
-  s.querySelector(".row").onclick=e=>{const a=e.target.dataset.a;if(a===undefined)return;const ok=(a==="1")===c.a;if(ok)score++;vib();
+  s.querySelector(".row").onclick=e=>{const a=e.target.dataset.a;if(a===undefined)return;const ok=(a==="1")===c.a;if(ok)score++;vib();if(dom==="food")frec(c,ok);
    // step 1: verdict
    s.querySelector(".row").outerHTML=`<div><div class="d verdict">${ok?"Yes!":"Nope."}</div><span class="pill">It's ${c.a?"TRUE":"FALSE"}</span><p class="lead mt">${c.s}</p><div class="hint">Why? Scroll ↑</div></div>`;
    s.querySelector(".q").style.margin="18px 0 0";
@@ -359,7 +378,7 @@ function daily(){const st0=S[dom]||(S[dom]={});if(!st0.start){st0.start=day();sa
    f.appendChild(w);i++;i<d.cards.length?ask(1):end()}}
  function end(){const st=S[dom];if(!S.done){S.done=1;save()}installBar();if(st.last!==day()){st.streak=st.last===day(1)?(st.streak||0)+1:1;st.last=day();save();send("plays",{score,details:{d:dom,profile:st.profile,streak:st.streak}})}
   const others=Object.keys(D).filter(k=>k!==dom);const s=document.createElement("section");s.className="scr";
-  s.innerHTML=`<span class="tag">Today's score · ${d.name}</span><div class="sp"></div><div class="d" style="font-size:110px;line-height:1">${score}/${d.cards.length}</div><p class="d" style="font-size:26px">🔥 ${st.streak}-day streak</p><p class="lead mt">5 new cards tomorrow.</p><div class="sp"></div>
+  s.innerHTML=`<span class="tag">Today's score · ${d.name}</span><div class="sp"></div><div class="d" style="font-size:110px;line-height:1">${score}/${d.cards.length}</div><p class="d" style="font-size:26px">🔥 ${st.streak}-day streak</p><p class="lead mt">5 new cards tomorrow.</p>${dom==="food"?fprogHtml():""}<div class="sp"></div>
   <div id="keep"><p class="d" style="font-size:22px;margin-bottom:8px">Keep your streak alive</p><p style="font-size:15px;margin-bottom:10px">Get tomorrow's cards by email. Free, unsubscribe anytime.</p>
   <input id="em" type="email" placeholder="you@email.com" autocomplete="email" aria-label="Email"><button class="btn" id="kp">Send me tomorrow's cards</button></div>
   <button class="btn ghost mt" id="sh">Share my score</button><p class="small" style="margin:14px 0 8px">Try another topic</p><div class="row">${others.map(k=>`<button class="btn ghost" data-k="${k}">${D[k].name}</button>`).join("")}</div>`;
